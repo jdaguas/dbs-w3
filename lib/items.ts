@@ -12,6 +12,9 @@ export type Item = {
   emailApp?: EmailApp; // only when channel is "email"
   message?: string; // "What's it about?": a quick note or the whole pasted message
   dueDate: string | null; // local YYYY-MM-DD; null = No rush
+  dueAt?: string; // exact deadline after a boost; overrides the end of dueDate
+  boostStart?: string; // when the latest boost was given (the time bar refills from here)
+  boosts?: number; // how many boosts so far; each one gives more time
   draft: string; // non-empty + status "needs" ⇒ shown as Drafting
   ongoing: boolean; // "Keep tracking after I reply"
   status: Status;
@@ -47,7 +50,8 @@ export const REPLY_BY: { value: ReplyBy; label: string }[] = [
 export const WHO_MAX = 40;
 export const TEXT_MAX = 5000; // pasted message and reply draft
 export const FOLLOW_UP_DAYS = 3;
-const DAY = 24 * 60 * 60 * 1000;
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
 
 export function channelLabel(channel: Channel) {
   return CHANNELS.find((c) => c.value === channel)?.label ?? "Other";
@@ -129,29 +133,104 @@ export function receivedLabel(createdAt: string, now = new Date()) {
   return date;
 }
 
-/** The reply-by date and how long is left: { date: "10/20", left: "2 days left" }. */
-export function replyByLabel(dueDate: string, now = new Date()) {
+/** When the reply window closes (ms): a boosted deadline, else midnight after the reply-by day. null = No rush. */
+export function dueEnd(item: Pick<Item, "dueDate" | "dueAt">): number | null {
+  if (item.dueAt) return new Date(item.dueAt).getTime();
+  if (!item.dueDate) return null;
+  const due = fromISODate(item.dueDate);
+  return new Date(due.getFullYear(), due.getMonth(), due.getDate() + 1).getTime();
+}
+
+function count(n: number, unit: string) {
+  return `${n} ${unit}${n === 1 ? "" : "s"}`;
+}
+
+/** "6:45 PM" today, else "10/19 6:45 PM". */
+function timeLabel(t: number, now: Date) {
+  const d = new Date(t);
+  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return toLocalISODate(d) === todayISO(now) ? time : `${shortDate(d)} ${time}`;
+}
+
+/** The reply-by date and how long is left: { date: "10/20", left: "2 days left" }. null = No rush. */
+export function replyByLabel(item: Pick<Item, "dueDate" | "dueAt">, now = new Date()) {
+  const end = dueEnd(item);
+  if (end === null) return null;
+
+  // Boosted: an exact time, counted in hours, then days.
+  if (item.dueAt) {
+    const ms = end - now.getTime();
+    const hours = Math.floor(Math.abs(ms) / HOUR);
+    const span = hours >= 24 ? count(Math.floor(hours / 24), "day") : hours < 1 ? "under an hour" : count(hours, "hour");
+    return { date: timeLabel(end, now), left: ms < 0 ? `${span} past` : `${span} left` };
+  }
+
+  // A reply-by day: counted in calendar days, or hours on the day itself.
+  const dueDate = item.dueDate!;
   const days = Math.round((fromISODate(dueDate).getTime() - fromISODate(todayISO(now)).getTime()) / DAY);
   let left: string;
-  if (days < 0) left = `${-days} ${days === -1 ? "day" : "days"} past`;
-  else if (days > 0) left = `${days} ${days === 1 ? "day" : "days"} left`;
+  if (days < 0) left = `${count(-days, "day")} past`;
+  else if (days > 0) left = `${count(days, "day")} left`;
   else {
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    const hours = Math.floor((endOfDay.getTime() - now.getTime()) / (60 * 60 * 1000));
-    left = hours < 1 ? "under an hour left" : `${hours} ${hours === 1 ? "hour" : "hours"} left`;
+    const hours = Math.floor((end - now.getTime()) / HOUR);
+    left = hours < 1 ? "under an hour left" : `${count(hours, "hour")} left`;
   }
   return { date: shortDate(fromISODate(dueDate)), left };
 }
 
 /**
- * How much of the reply window is left, for the time bar: 1 = just received,
- * 0 = past the date (the window ends at midnight after the reply-by day). null = No rush.
+ * How much of the reply window is left, for the time bar: 1 = full, 0 = past the date.
+ * The window runs from when it was received (or last boosted) to dueEnd. null = No rush.
  */
-export function timeLeftFraction(item: Pick<Item, "dueDate" | "createdAt">, now = new Date()) {
-  if (!item.dueDate) return null;
-  const due = fromISODate(item.dueDate);
-  const end = new Date(due.getFullYear(), due.getMonth(), due.getDate() + 1).getTime();
-  const total = end - new Date(item.createdAt).getTime();
+export function timeLeftFraction(item: Pick<Item, "dueDate" | "dueAt" | "createdAt" | "boostStart">, now = new Date()) {
+  const end = dueEnd(item);
+  if (end === null) return null;
+  const total = end - new Date(item.boostStart ?? item.createdAt).getTime();
+  if (total <= 0) return 0;
+  return Math.min(1, Math.max(0, (end - now.getTime()) / total));
+}
+
+// ---- Boost: more time for a reply that's past its date ----
+
+/** Each boost gives more than the last: 4 hours, then 8 hours, then a day at a time. */
+export const BOOST_STEPS = [
+  { ms: 4 * HOUR, label: "4 hours" },
+  { ms: 8 * HOUR, label: "8 hours" },
+  { ms: DAY, label: "1 day" },
+];
+
+export function nextBoost(item: Pick<Item, "boosts">) {
+  return BOOST_STEPS[Math.min(item.boosts ?? 0, BOOST_STEPS.length - 1)];
+}
+
+/** Shown once a reply is past its date, and kept after boosting so taps can add more. */
+export function canBoost(item: Item, now = new Date()) {
+  return item.status === "needs" && dueEnd(item) !== null && (isOverdue(item, now) || (item.boosts ?? 0) > 0);
+}
+
+/** Adds the next boost to whatever time is left (or to now, if it's past) and refills the bar. */
+export function boostPatch(item: Item, now = new Date()): Partial<Item> {
+  const base = Math.max(now.getTime(), dueEnd(item) ?? now.getTime());
+  return {
+    dueAt: new Date(base + nextBoost(item).ms).toISOString(),
+    boostStart: now.toISOString(),
+    boosts: (item.boosts ?? 0) + 1,
+  };
+}
+
+/** Clears a boost when the reply window starts over (they replied, or it's reopened). */
+export const NO_BOOST: Partial<Item> = { dueAt: undefined, boostStart: undefined, boosts: undefined };
+
+/**
+ * Waiting items: how much is left before a follow-up is due (1 = just sent, 0 = follow up now).
+ * Matches isFollowUpDue: due at midnight starting the FOLLOW_UP_DAYS-th day after sending.
+ */
+export function followUpFraction(item: Pick<Item, "waitingSince" | "sentAt">, now = new Date()) {
+  const since = item.waitingSince ?? item.sentAt;
+  if (!since) return 0;
+  const start = new Date(since);
+  const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + FOLLOW_UP_DAYS).getTime();
+  const total = end - start.getTime();
   if (total <= 0) return 0;
   return Math.min(1, Math.max(0, (end - now.getTime()) / total));
 }
@@ -163,26 +242,28 @@ export function isDrafting(item: Item) {
 }
 
 export function isOverdue(item: Item, now = new Date()) {
-  return item.status === "needs" && item.dueDate !== null && item.dueDate < todayISO(now);
+  const end = dueEnd(item);
+  return item.status === "needs" && end !== null && end <= now.getTime();
 }
 
 export function isFollowUpDue(item: Item, now = new Date()) {
   return item.status === "waiting" && !!item.waitingSince && daysSince(item.waitingSince, now) >= FOLLOW_UP_DAYS;
 }
 
-/** Home order: overdue → soonest due → no date, oldest first within each. */
+/**
+ * Home order, most urgent first: soonest deadline → No rush (oldest first) → past the date
+ * (most recently missed first). Past-due ones aren't urgent anymore, so they go last.
+ */
 export function sortNeedsReply(items: Item[], now = new Date()) {
+  const group = (i: Item) => (isOverdue(i, now) ? 2 : dueEnd(i) === null ? 1 : 0);
   return items
     .filter((i) => i.status === "needs")
     .sort((a, b) => {
-      const ao = isOverdue(a, now) ? 0 : 1;
-      const bo = isOverdue(b, now) ? 0 : 1;
-      if (ao !== bo) return ao - bo;
-      if (a.dueDate !== b.dueDate) {
-        if (a.dueDate === null) return 1;
-        if (b.dueDate === null) return -1;
-        return a.dueDate < b.dueDate ? -1 : 1;
-      }
+      const ga = group(a);
+      const gb = group(b);
+      if (ga !== gb) return ga - gb;
+      if (ga === 0) return dueEnd(a)! - dueEnd(b)!;
+      if (ga === 2) return dueEnd(b)! - dueEnd(a)!;
       return a.createdAt < b.createdAt ? -1 : 1;
     });
 }

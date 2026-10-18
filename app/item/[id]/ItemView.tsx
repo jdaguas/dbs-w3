@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { Banner } from "@/components/Banner";
+import { BoostButton } from "@/components/BoostButton";
 import { ChannelIcon } from "@/components/ChannelIcon";
 import { Button, ButtonLink } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
@@ -12,7 +13,9 @@ import { Tag } from "@/components/Tag";
 import { TextArea } from "@/components/TextField";
 import { TimeBar } from "@/components/TimeBar";
 import {
+  canBoost,
   dueDateFor,
+  NO_BOOST,
   FOLLOW_UP_DAYS,
   isOverdue,
   sourceLabel,
@@ -118,7 +121,7 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
       status: "needs",
       draft: "",
       waitingSince: undefined,
-      ...(theyReplied && { createdAt: new Date().toISOString(), dueDate: dueDateFor("week", "") }),
+      ...(theyReplied && { createdAt: new Date().toISOString(), dueDate: dueDateFor("week", ""), ...NO_BOOST }),
     });
     focusDraft();
   }
@@ -130,7 +133,7 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
 
   function reopen() {
     setDraft("");
-    updateItem(item.id, { status: "needs", draft: "", sentAt: undefined, waitingSince: undefined });
+    updateItem(item.id, { status: "needs", draft: "", sentAt: undefined, waitingSince: undefined, ...NO_BOOST });
     focusDraft();
   }
 
@@ -150,11 +153,12 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
             <ChannelIcon item={item} size="lg" />
           </div>
           <StatusLine item={item} now={now} className="text-ink-soft" />
-          {item.status === "needs" && <TimeBar item={item} now={now} />}
-          {overdue && (
-            <p>
-              <Tag>Past your date</Tag>
-            </p>
+          <TimeBar item={item} now={now} />
+          {(overdue || canBoost(item, now)) && (
+            <div className="flex flex-wrap items-center gap-2">
+              {overdue && <Tag>Past your date</Tag>}
+              {canBoost(item, now) && <BoostButton item={item} />}
+            </div>
           )}
         </div>
       </header>

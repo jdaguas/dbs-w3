@@ -6,12 +6,13 @@
  * palette colors, so the look can change in one place. Text pairs meet WCAG AA:
  *   ink / ink-soft / ink-muted on canvas, surface, and subtle (≥ 4.5:1)
  *   white on accent (5.5:1) · accent-ink on accent-soft · warn-ink on warn-soft · danger on surface
+ * Graphics (time bar fills, icons) are ≥ 3:1 against surface.
  */
 @theme {
   /* Surfaces */
-  --color-canvas: #f6f8fa; /* page background */
+  --color-canvas: #eef2f5; /* page background: a step darker than cards so they stand out */
   --color-surface: #ffffff; /* cards, inputs, header */
-  --color-subtle: #eef2f5; /* tracks, tags, quiet fills */
+  --color-subtle: #e4e9ee; /* tags, tab track, quiet fills */
 
   /* Text */
   --color-ink: #0f172a; /* headings, primary text */
@@ -30,11 +31,15 @@
   --color-accent-ink: #0b4f4a;
   --color-focus: #0f766e;
 
+  /* Time bar: every fill is ≥ 3:1 against white cards (WCAG non-text contrast) */
+  --color-track: #d5dde5; /* empty part of the bar */
+  --color-open: #4f8f89; /* No rush: a solid, calmer teal (3.7:1) */
+
   /* Status: overdue / no reply (one calm accent, always with a text label) */
   --color-warn-soft: #fdf3dc;
   --color-warn-line: #f0c76e;
   --color-warn-ink: #7a3e09;
-  --color-warn: #d98a04; /* time bar when little time is left (graphic, not text) */
+  --color-warn: #b45309; /* time bar when little time is left */
 
   --color-danger: #b42318;
   --color-danger-soft: #fef1f0;

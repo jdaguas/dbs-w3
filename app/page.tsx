@@ -96,7 +96,13 @@ function HomeContent({ store }: { store: Store }) {
   const [flash, setFlash] = useState(() => peekFlash());
   useEffect(() => clearFlash(), []);
 
-  const needs = sortNeedsReply(store.items, now);
+  // Most urgent first. Boosting doesn't reshuffle the list while you're looking at it (so you can
+  // tap again in place); the order refreshes when items are added or removed, or on the next visit.
+  const sorted = sortNeedsReply(store.items, now);
+  const [order, setOrder] = useState(() => sorted.map((i) => i.id));
+  const sameItems = sorted.length === order.length && sorted.every((i) => order.includes(i.id));
+  if (!sameItems) setOrder(sorted.map((i) => i.id));
+  const needs = sameItems ? order.map((id) => sorted.find((i) => i.id === id)!) : sorted;
   const followUps = followUpsDue(store.items, now);
   // Includes the quiet ones also shown under Follow up, so the count matches the list.
   const waiting = waitingOn(store.items);

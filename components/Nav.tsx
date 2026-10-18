@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { buttonClass } from "./Button";
 
 const tabs = [
   { href: "/", label: "Drafts" },
@@ -32,13 +31,6 @@ export function Nav() {
             </Link>
           );
         })}
-        <Link
-          href="/add"
-          aria-current={pathname === "/add" ? "page" : undefined}
-          className={buttonClass({ variant: "primary", className: "ml-auto min-h-10 px-4" })}
-        >
-          <span aria-hidden="true">+</span> Add
-        </Link>
       </nav>
     </header>
   );

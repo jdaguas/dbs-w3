@@ -1,6 +1,7 @@
 // Item model, date helpers, sorting, and the validation shared by quick-add and /add.
 
 export type Channel = "text" | "email" | "slack" | "dm" | "other";
+export type EmailApp = "gmail" | "apple" | "outlook" | "yahoo" | "other";
 export type Status = "needs" | "waiting" | "done";
 export type ReplyBy = "today" | "tomorrow" | "week" | "none" | "date";
 
@@ -8,6 +9,7 @@ export type Item = {
   id: string;
   who: string;
   channel: Channel;
+  emailApp?: EmailApp; // only when channel is "email"
   about?: string;
   dueDate: string | null; // local YYYY-MM-DD; null = No rush
   draft: string; // non-empty + status "needs" ⇒ shown as Drafting
@@ -26,6 +28,14 @@ export const CHANNELS: { value: Channel; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+export const EMAIL_APPS: { value: EmailApp; label: string }[] = [
+  { value: "gmail", label: "Gmail" },
+  { value: "apple", label: "Mail (iOS)" },
+  { value: "outlook", label: "Outlook" },
+  { value: "yahoo", label: "Yahoo" },
+  { value: "other", label: "Other" },
+];
+
 export const REPLY_BY: { value: ReplyBy; label: string }[] = [
   { value: "today", label: "Today" },
   { value: "tomorrow", label: "Tomorrow" },
@@ -41,6 +51,14 @@ const DAY = 24 * 60 * 60 * 1000;
 
 export function channelLabel(channel: Channel) {
   return CHANNELS.find((c) => c.value === channel)?.label ?? "Other";
+}
+
+/** Where it came from, as shown on cards: "Gmail", "Text", or "Email" when no app was picked. */
+export function sourceLabel(item: Pick<Item, "channel" | "emailApp">) {
+  if (item.channel === "email" && item.emailApp && item.emailApp !== "other") {
+    return EMAIL_APPS.find((a) => a.value === item.emailApp)?.label ?? "Email";
+  }
+  return channelLabel(item.channel);
 }
 
 // ---- Dates (local calendar days, not UTC) ----
@@ -154,6 +172,7 @@ export function newId() {
 export function createItem(input: {
   who: string;
   channel: Channel;
+  emailApp?: EmailApp | "";
   about?: string;
   dueDate: string | null;
   ongoing: boolean;
@@ -163,6 +182,7 @@ export function createItem(input: {
     id: newId(),
     who: input.who.trim(),
     channel: input.channel,
+    emailApp: input.channel === "email" && input.emailApp ? input.emailApp : undefined,
     about: input.about?.trim() || undefined,
     dueDate: input.dueDate,
     draft: input.draft ?? "",
@@ -177,6 +197,7 @@ export function createItem(input: {
 export type ItemInput = {
   who: string;
   channel: Channel | "";
+  emailApp: EmailApp | "";
   about: string;
   replyBy: ReplyBy;
   pickedDate: string;

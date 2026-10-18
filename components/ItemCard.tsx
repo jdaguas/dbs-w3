@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { agoLabel, channelLabel, dueLabel, isDrafting, isFollowUpDue, isOverdue, type Item } from "@/lib/items";
+import { agoLabel, dueLabel, isDrafting, isFollowUpDue, isOverdue, sourceLabel, type Item } from "@/lib/items";
 
 // One item in a list. The whole card links to the item page. The status line
 // follows Gmail's pattern: a plain fact plus a one-word next step.
@@ -30,7 +30,7 @@ export function ItemCard({ item, now = new Date() }: { item: Item; now?: Date })
       <div className="flex items-baseline justify-between gap-3">
         <p className="truncate font-semibold text-zinc-900">{item.who}</p>
         <span className="shrink-0 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700">
-          {channelLabel(item.channel)}
+          {sourceLabel(item)}
         </span>
       </div>
 

@@ -26,7 +26,7 @@ flowchart TD
   List["Home: quick-add, follow-ups due,<br/>Needs reply + Drafting"] -- "Quick-add: Who + Where, Enter" --> QCheck{Valid?}
   QCheck -- No --> QErr["Error next to the field, input kept"] --> List
   QCheck -- "Yes (This week, one-time)" --> Toast["Added. First time: 'Saved only in this browser'"] --> List
-  List -- "More options / + Add" --> Form["/add: Who, Where, About, Reply by,<br/>☐ Keep tracking after I reply"]
+  List -- "More options" --> Form["/add: Who, Where, About, Reply by,<br/>☐ Keep tracking after I reply"]
   Form -- invalid --> Err["Error next to the field, input kept"] --> Form
   Form -- valid --> List
 

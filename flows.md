@@ -17,7 +17,7 @@ flowchart TD
   List["Home: quick-add, follow-ups due,<br/>Needs reply + Drafting"] -- "Quick-add: Who + Where, Enter" --> QCheck{Valid?}
   QCheck -- No --> QErr["Error next to the field, input kept"] --> List
   QCheck -- "Yes (This week, one-time)" --> Toast["Added. First time: 'Saved only in this browser'"] --> List
-  List -- "More options / + Add" --> Form["/add: Who, Where, About, Reply by,<br/>☐ Keep tracking after I reply"]
+  List -- "More options" --> Form["/add: Who, Where, About, Reply by,<br/>☐ Keep tracking after I reply"]
   Form -- invalid --> Err["Error next to the field, input kept"] --> Form
   Form -- valid --> List
 
@@ -67,7 +67,7 @@ stateDiagram-v2
 | `/item/[id]` | Write the draft, Copy reply, Mark sent, toggle Keep tracking after I reply, Delete |
 | `/waiting` | All conversations waiting on the other person (quiet 3+ days ones also surface on Home), "Sent this week" |
 
-Shared nav on every page: **Drafts · Waiting · + Add**, with the current page highlighted.
+Shared nav on every page: **Drafts · Waiting**, with the current page highlighted. Adding happens from Home (quick-add, or "More options" for the full form), so there is one way in, not two.
 
 ## The form and its errors
 
@@ -75,6 +75,7 @@ Shared nav on every page: **Drafts · Waiting · + Add**, with the current page 
 |---|---|---|
 | Who (required) | Text | "Enter who you need to reply to." · "Keep the name under 40 characters." |
 | Where (required) | Text / Email / Slack / DM / Other | "Pick where the message came from." |
+| Which email app? (optional, only when Where = Email) | Gmail / Mail (iOS) / Outlook / Yahoo / Other | None. Cards show the app ("Gmail") instead of "Email" |
 | About (optional) | Text | "Keep this under 80 characters." |
 | Reply by (required) | Today / Tomorrow / This week / No rush / Pick a date (default: This week) | "Choose a date, or pick one of the options above." · "Pick today or a later date." |
 | Keep tracking after I reply | Checkbox beside Reply by (default: off = one-time) | None |

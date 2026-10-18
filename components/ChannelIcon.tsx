@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { sourceLabel, type Item } from "@/lib/items";
 
-// Where the message came from, as a small app tile (Gmail, Slack, Text…).
+// Where the message came from, as an app tile (Gmail, Slack, Text…).
 // The name is the accessible label and the hover tooltip.
 
 type Key = "text" | "email" | "gmail" | "apple" | "outlook" | "yahoo" | "slack" | "dm" | "other";
@@ -66,7 +66,16 @@ function keyFor(item: Pick<Item, "channel" | "emailApp">): Key {
   return !item.emailApp || item.emailApp === "other" ? "email" : item.emailApp;
 }
 
-export function ChannelIcon({ item, size = "md" }: { item: Pick<Item, "channel" | "emailApp">; size?: "md" | "lg" }) {
+/** Sits where a contact photo would. `muted` greys it out (past the reply-by date). */
+export function ChannelIcon({
+  item,
+  size = "md",
+  muted = false,
+}: {
+  item: Pick<Item, "channel" | "emailApp">;
+  size?: "md" | "lg";
+  muted?: boolean;
+}) {
   const { tile, glyph } = icons[keyFor(item)];
   const label = sourceLabel(item);
   return (
@@ -74,9 +83,13 @@ export function ChannelIcon({ item, size = "md" }: { item: Pick<Item, "channel" 
       role="img"
       aria-label={`From ${label}`}
       title={label}
-      className={`flex shrink-0 items-center justify-center rounded-[9px] text-white shadow-card ${tile} ${size === "lg" ? "size-9" : "size-7"}`}
+      className={
+        `flex shrink-0 items-center justify-center text-white shadow-card ${tile} ` +
+        (size === "lg" ? "size-12 rounded-[14px] " : "size-10 rounded-[12px] ") +
+        (muted ? "grayscale" : "")
+      }
     >
-      <svg viewBox="0 0 20 20" className={size === "lg" ? "size-5.5" : "size-4.5"} aria-hidden="true">
+      <svg viewBox="0 0 20 20" className={size === "lg" ? "size-7" : "size-6"} aria-hidden="true">
         {glyph}
       </svg>
     </span>

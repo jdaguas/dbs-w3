@@ -107,13 +107,6 @@ export function daysSince(iso: string, now = new Date()) {
   return Math.max(0, Math.round((b - a) / DAY));
 }
 
-export function agoLabel(iso: string, now = new Date()) {
-  const days = daysSince(iso, now);
-  if (days === 0) return "today";
-  if (days === 1) return "yesterday";
-  return `${days} days ago`;
-}
-
 function fromISODate(iso: string) {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d);
@@ -124,12 +117,12 @@ export function shortDate(d: Date) {
   return d.toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
 }
 
-/** "today (10/18)", "yesterday (10/17)", or just "10/12". */
-export function receivedLabel(createdAt: string, now = new Date()) {
-  const date = shortDate(new Date(createdAt));
-  const days = daysSince(createdAt, now);
-  if (days === 0) return `today (${date})`;
-  if (days === 1) return `yesterday (${date})`;
+/** "today, 10/18", "yesterday, 10/17", or just "10/12". */
+export function dayLabel(iso: string, now = new Date()) {
+  const date = shortDate(new Date(iso));
+  const days = daysSince(iso, now);
+  if (days === 0) return `today, ${date}`;
+  if (days === 1) return `yesterday, ${date}`;
   return date;
 }
 
@@ -268,13 +261,16 @@ export function sortNeedsReply(items: Item[], now = new Date()) {
     });
 }
 
-/** For waiting and done items: "Sent 3 days ago. Follow up?" (To reply items show dates instead.) */
+/** "Received 10/12", or "Sent yesterday, 10/17" once replied. Shown after the card's preview. */
+export function dateLabel(item: Item, now = new Date()) {
+  if (item.status === "needs") return `Received ${dayLabel(item.createdAt, now)}`;
+  return `Sent ${dayLabel(item.waitingSince ?? item.sentAt ?? item.createdAt, now)}`;
+}
+
+/** For waiting and done items, above the bar. (To reply items show "Reply by …" instead.) */
 export function statusLine(item: Item, now = new Date()) {
-  if (item.status === "waiting") {
-    const sent = agoLabel(item.waitingSince ?? item.sentAt ?? item.createdAt, now);
-    return isFollowUpDue(item, now) ? `Sent ${sent}. Follow up?` : `Sent ${sent}. Waiting on them.`;
-  }
-  return `Sent ${agoLabel(item.sentAt ?? item.createdAt, now)}.`;
+  if (item.status === "waiting") return isFollowUpDue(item, now) ? "No reply yet. Follow up?" : "Waiting on them";
+  return "Done";
 }
 
 export function followUpsDue(items: Item[], now = new Date()) {

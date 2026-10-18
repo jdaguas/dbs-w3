@@ -2,18 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Avatar } from "@/components/Avatar";
 import { Banner } from "@/components/Banner";
 import { BoostButton } from "@/components/BoostButton";
 import { ChannelIcon } from "@/components/ChannelIcon";
 import { Button, ButtonLink } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
 import { StatusLine } from "@/components/ItemCard";
-import { Tag } from "@/components/Tag";
 import { TextArea } from "@/components/TextField";
 import { TimeBar } from "@/components/TimeBar";
 import {
   canBoost,
+  dateLabel,
   dueDateFor,
   NO_BOOST,
   FOLLOW_UP_DAYS,
@@ -145,22 +144,25 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex items-start gap-4">
-        <Avatar name={item.who} size="lg" muted={overdue} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex items-baseline justify-between gap-3">
+      <header className="flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <ChannelIcon item={item} size="lg" muted={overdue} />
+          <div className="min-w-0">
             <h1 className="truncate text-2xl font-semibold tracking-tight text-ink">{item.who}</h1>
-            <ChannelIcon item={item} size="lg" />
+            <p className="text-sm text-ink-muted">{dateLabel(item, now)}</p>
           </div>
-          <StatusLine item={item} now={now} className="text-ink-soft" />
-          <TimeBar item={item} now={now} />
-          {(overdue || canBoost(item, now)) && (
-            <div className="flex flex-wrap items-center gap-2">
-              {overdue && <Tag>Past your date</Tag>}
-              {canBoost(item, now) && <BoostButton item={item} />}
-            </div>
-          )}
         </div>
+        {item.status !== "done" && (
+          <div>
+            <StatusLine item={item} now={now} className="text-sm text-ink-muted" />
+            <TimeBar item={item} now={now} />
+          </div>
+        )}
+        {canBoost(item, now) && (
+          <div>
+            <BoostButton item={item} />
+          </div>
+        )}
       </header>
 
       {item.message && (

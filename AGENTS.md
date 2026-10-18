@@ -25,13 +25,13 @@ Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows. The 
 - Where: Text / Email / Slack / DM / Other. Picking Email shows an optional "Which email app?" (Gmail / Mail (iOS) / Outlook / Yahoo / Other); cards then show the app name.
 - The add form has two optional text boxes: "What's it about?" (free text: a quick note or the whole pasted email/text) and "Your reply" (start the draft now or later; a draft makes the item Drafting). No file upload. Cards preview "What's it about?" on one line.
 - Reply by: Today / Tomorrow / This week / No rush / Pick a date. Default: This week.
-- Home has a quick-add (Who + Where, Enter; defaults This week, one-time). "More options" opens `/add` with typed values carried over.
+- Home has a quick-add (Who + Where, Enter; defaults This week, one-time). On return visits the list comes first and the full add form sits below it in a collapsed "+ Add someone" panel (open when nothing is left to reply to); no quick-add there. "More options" opens `/add` with typed values carried over.
 - First visit: "Who do you owe a reply?" quick-add, starter chips (+ Mom, + Group chat, + Recruiter), and one sample item that shows a draft. No tour, never an empty screen. "Saved only in this browser" appears after the first save.
 - Coming back: "Welcome back" greeting with who's waiting. Follow-ups quiet 3+ days come back to the top of Home ("Sent 3 days ago. Follow up?"), then overdue, then the rest. Drafts restored.
-- Wording: "Received 3 days ago. Reply?" + "You said by Fri." Calm tone; overdue = one accent color plus a text label. Counts are computed from the visible list.
+- Wording: "Received today (10/18) → Reply by 10/20 · 2 days left" (yesterday shows "yesterday (10/17)", older just "10/12"; due today shows hours left; No rush shows "→ No rush"). Waiting keeps "Sent 3 days ago. Follow up?". Calm tone; overdue = one accent color plus a text label. Counts are computed from the visible list.
 
 ## Pages
-`/` home (quick-add + list) · `/add` full form · `/item/[id]` draft · `/waiting` waiting on them. Shared nav: Drafts · Waiting (no Add button in the nav; adding starts from Home quick-add / "More options").
+`/` home: a sliding To reply | Waiting switch (tabs) over the list, then "+ Add someone" · `/add` full form · `/item/[id]` draft. No separate `/waiting` page. Shared header: a "Drafts" link home.
 
 ## Design requirements
 - Forms: one column, a real label on every field, errors next to the field that say what to do next ("Enter who you need to reply to.", not "Invalid input"), and keep what the person typed.

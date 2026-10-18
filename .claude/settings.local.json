@@ -1,11 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run *)",
+      "Bash",
+      "Edit",
+      "Write",
+      "Read",
       "WebSearch",
-      "WebFetch(domain:www.boomeranggmail.com)",
       "WebFetch"
     ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(git reset --hard *)"
+    ],
     "defaultMode": "auto"
-  }
+  },
+  "askUserQuestionTimeout": "60s"
 }

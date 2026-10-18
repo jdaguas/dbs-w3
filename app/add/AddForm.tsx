@@ -15,13 +15,26 @@ import {
   todayISO,
   validateItem,
   type Channel,
+  type Item,
   type ItemErrors,
   type ItemInput,
   type ReplyBy,
 } from "@/lib/items";
-import { addItem } from "@/lib/storage";
+import { addItem, addedFlash, setFlash } from "@/lib/storage";
 
-export function AddForm({ initialWho, initialChannel }: { initialWho: string; initialChannel: Channel | "" }) {
+// The full add form. On /add it saves and goes Home; inside Home's "Add someone"
+// panel it hands the new item to `onAdded` and Cancel closes the panel.
+export function AddForm({
+  initialWho = "",
+  initialChannel = "",
+  onAdded,
+  onCancel,
+}: {
+  initialWho?: string;
+  initialChannel?: Channel | "";
+  onAdded?: (item: Item) => void;
+  onCancel?: () => void;
+}) {
   const router = useRouter();
   const [input, setInput] = useState<ItemInput>({
     who: initialWho,
@@ -77,7 +90,9 @@ export function AddForm({ initialWho, initialChannel }: { initialWho: string; in
       ongoing,
     });
     addItem(item);
-    router.push(`/?added=${item.id}`);
+    if (onAdded) return onAdded(item);
+    setFlash(addedFlash(item.who));
+    router.push("/");
   }
 
   return (
@@ -90,7 +105,7 @@ export function AddForm({ initialWho, initialChannel }: { initialWho: string; in
         onValueChange={(who) => update({ who })}
         error={errors.who}
         autoComplete="off"
-        autoFocus={!initialWho}
+        autoFocus={!onAdded && !initialWho}
       />
 
       <ChipGroup
@@ -166,9 +181,15 @@ export function AddForm({ initialWho, initialChannel }: { initialWho: string; in
         <Button type="submit" full className="sm:w-auto">
           Add to Drafts
         </Button>
-        <ButtonLink href="/" variant="ghost" full className="sm:w-auto">
-          Cancel
-        </ButtonLink>
+        {onCancel ? (
+          <Button variant="ghost" onClick={onCancel} full className="sm:w-auto">
+            Cancel
+          </Button>
+        ) : (
+          <ButtonLink href="/" variant="ghost" full className="sm:w-auto">
+            Cancel
+          </ButtonLink>
+        )}
       </div>
     </form>
   );

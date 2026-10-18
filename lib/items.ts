@@ -75,8 +75,8 @@ export function todayISO(now = new Date()) {
 }
 
 function addDays(iso: string, days: number) {
-  const [y, m, d] = iso.split("-").map(Number);
-  return toLocalISODate(new Date(y, m - 1, d + days));
+  const d = fromISODate(iso);
+  return toLocalISODate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + days));
 }
 
 export function dueDateFor(choice: ReplyBy, pickedDate: string, now = new Date()) {
@@ -110,15 +110,37 @@ export function agoLabel(iso: string, now = new Date()) {
   return `${days} days ago`;
 }
 
-/** "today", "tomorrow", "Fri", or "Nov 3" for a local YYYY-MM-DD. */
-export function dueLabel(dueDate: string, now = new Date()) {
-  const today = todayISO(now);
-  if (dueDate === today) return "today";
-  if (dueDate === addDays(today, 1)) return "tomorrow";
-  const [y, m, d] = dueDate.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  const withinWeek = dueDate > today && dueDate <= addDays(today, 6);
-  return date.toLocaleDateString(undefined, withinWeek ? { weekday: "short" } : { month: "short", day: "numeric" });
+function fromISODate(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/** "10/18" (day and month in the person's own order). */
+export function shortDate(d: Date) {
+  return d.toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
+}
+
+/** "today (10/18)", "yesterday (10/17)", or just "10/12". */
+export function receivedLabel(createdAt: string, now = new Date()) {
+  const date = shortDate(new Date(createdAt));
+  const days = daysSince(createdAt, now);
+  if (days === 0) return `today (${date})`;
+  if (days === 1) return `yesterday (${date})`;
+  return date;
+}
+
+/** The reply-by date and how long is left: { date: "10/20", left: "2 days left" }. */
+export function replyByLabel(dueDate: string, now = new Date()) {
+  const days = Math.round((fromISODate(dueDate).getTime() - fromISODate(todayISO(now)).getTime()) / DAY);
+  let left: string;
+  if (days < 0) left = `${-days} ${days === -1 ? "day" : "days"} past`;
+  else if (days > 0) left = `${days} ${days === 1 ? "day" : "days"} left`;
+  else {
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const hours = Math.floor((endOfDay.getTime() - now.getTime()) / (60 * 60 * 1000));
+    left = hours < 1 ? "under an hour left" : `${hours} ${hours === 1 ? "hour" : "hours"} left`;
+  }
+  return { date: shortDate(fromISODate(dueDate)), left };
 }
 
 // ---- Derived state ----
@@ -152,9 +174,25 @@ export function sortNeedsReply(items: Item[], now = new Date()) {
     });
 }
 
+/** For waiting and done items: "Sent 3 days ago. Follow up?" (To reply items show dates instead.) */
+export function statusLine(item: Item, now = new Date()) {
+  if (item.status === "waiting") {
+    const sent = agoLabel(item.waitingSince ?? item.sentAt ?? item.createdAt, now);
+    return isFollowUpDue(item, now) ? `Sent ${sent}. Follow up?` : `Sent ${sent}. Waiting on them.`;
+  }
+  return `Sent ${agoLabel(item.sentAt ?? item.createdAt, now)}.`;
+}
+
 export function followUpsDue(items: Item[], now = new Date()) {
   return items
     .filter((i) => isFollowUpDue(i, now))
+    .sort((a, b) => ((a.waitingSince ?? "") < (b.waitingSince ?? "") ? -1 : 1));
+}
+
+/** Waiting on them, longest quiet first. */
+export function waitingOn(items: Item[]) {
+  return items
+    .filter((i) => i.status === "waiting")
     .sort((a, b) => ((a.waitingSince ?? "") < (b.waitingSince ?? "") ? -1 : 1));
 }
 

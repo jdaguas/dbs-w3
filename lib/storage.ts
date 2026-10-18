@@ -123,11 +123,19 @@ function writeFlag(key: string, value: string) {
   }
 }
 
-/** Returns the previous visit time (or null) and records this visit. */
-export function recordVisit(now = new Date()): string | null {
-  const previous = readFlag(LAST_VISIT_KEY);
-  writeFlag(LAST_VISIT_KEY, now.toISOString());
-  return previous;
+let previousVisit: string | null | undefined;
+
+/**
+ * When the person last opened Drafts before this page load (or null), for the
+ * welcome-back greeting. Records this visit once per page load, so repeated
+ * renders and client navigations all see the same answer.
+ */
+export function getPreviousVisit(): string | null {
+  if (previousVisit === undefined) {
+    previousVisit = readFlag(LAST_VISIT_KEY);
+    writeFlag(LAST_VISIT_KEY, new Date().toISOString());
+  }
+  return previousVisit;
 }
 
 /** True only the first time it's called on this device: "Saved only in this browser." */
@@ -135,4 +143,31 @@ export function takeSavedNote(): boolean {
   if (readFlag(SAVED_NOTE_KEY)) return false;
   writeFlag(SAVED_NOTE_KEY, "1");
   return true;
+}
+
+// ---- One-time confirmation shown on Home after leaving another page ----
+
+export type Flash = { title: string; detail?: string };
+
+/** "Added Mom." plus, the first time ever, where it's saved. */
+export function addedFlash(who: string): Flash {
+  return {
+    title: `Added ${who}.`,
+    detail: takeSavedNote()
+      ? "Saved only in this browser, so it'll be here next time you open Drafts on this device."
+      : undefined,
+  };
+}
+let flash: Flash | null = null;
+
+export function setFlash(value: Flash) {
+  flash = value;
+}
+
+export function peekFlash() {
+  return flash;
+}
+
+export function clearFlash() {
+  flash = null;
 }

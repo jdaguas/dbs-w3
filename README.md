@@ -18,14 +18,16 @@ Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows.
 ```mermaid
 flowchart TD
   Open([Open Drafts]) --> Saved{Anything saved?}
-  Saved -- No --> First["First visit: 'Who do you owe a reply?'<br/>input + chips (+ Mom, + Group chat, + Recruiter)<br/>+ 1 sample item with a draft"]
-  Saved -- Yes --> Back["Welcome back: '3 people waiting, Mom for 4 days'<br/>overdue at top, drafts restored"]
-  First -- tap chip --> List
-  First -- type name / Add --> Form
+  Saved -- No --> First["First visit: 'Who do you owe a reply?'<br/>quick-add (Who + Where) + chips (+ Mom, + Group chat, + Recruiter)<br/>+ 1 sample item with a draft"]
+  Saved -- Yes --> Back["Welcome back: '3 people waiting, Mom for 4 days'<br/>follow-ups and overdue at top, drafts restored"]
+  First --> List
   Back --> List
 
-  List["Home: Needs reply + Drafting"] -- "+ Add" --> Form
-  Form["/add: Who, Where, About, Reply by, One-time or Ongoing"] -- invalid --> Err["Error next to the field, input kept"] --> Form
+  List["Home: quick-add, follow-ups due,<br/>Needs reply + Drafting"] -- "Quick-add: Who + Where, Enter" --> QCheck{Valid?}
+  QCheck -- No --> QErr["Error next to the field, input kept"] --> List
+  QCheck -- "Yes (This week, one-time)" --> Toast["Added. First time: 'Saved only in this browser'"] --> List
+  List -- "More options / + Add" --> Form["/add: Who, Where, About, Reply by,<br/>☐ Keep tracking after I reply"]
+  Form -- invalid --> Err["Error next to the field, input kept"] --> Form
   Form -- valid --> List
 
   List -- open item --> Item["/item/[id]: write draft (autosaves)"]
@@ -33,13 +35,14 @@ flowchart TD
   Copied -- No --> CopyErr["'Couldn't copy. Select the text and copy it yourself.'"] --> Item
   Copied -- Yes --> Sent
   Item -- Mark sent --> Sent["Sent"]
-  Sent --> Kind{One-time or ongoing?}
-  Kind -- One-time --> Done([Resolved: counted in 'Sent this week'])
-  Kind -- Ongoing --> Waiting["/waiting: Waiting on them"]
+  Sent --> Kind{Keep tracking?}
+  Kind -- No --> Done([Resolved: counted in 'Sent this week'])
+  Kind -- Yes --> Waiting["/waiting: Waiting on them"]
   Waiting -- Resolve conversation --> Done
-  Waiting -- "3+ days quiet" --> Nudge["'No answer from Sam in 3 days'"]
+  Waiting -- "3+ days quiet" --> Nudge["Back on top of Home:<br/>'Sent 3 days ago. Follow up?'"]
   Nudge -- Follow up --> Item
-  Waiting -- They replied --> Reply{Need to answer back?}
+  Nudge -- They replied --> Reply{Need to answer back?}
+  Waiting -- They replied --> Reply
   Reply -- Yes --> List
   Reply -- No --> Done
 ```

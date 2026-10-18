@@ -21,13 +21,15 @@ Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows. The 
 
 ## Product decisions
 - Item states: Needs reply → Drafting (has unsent draft text) → Sent → Waiting on them (ongoing conversations only).
-- Each item is a **one-time reply** (sent → resolved) or **ongoing** (sent → Waiting on them). Default: one-time. Can be changed on the item page.
-- Reply by: Today / This week / No rush / Pick a date. Default: This week.
-- First visit: "Who do you owe a reply?" with quick-add chips plus one sample item that shows a draft. Never an empty screen.
-- Coming back: "Welcome back" greeting with who's waiting, overdue first, drafts restored.
+- "Keep tracking after I reply" checkbox (default off = one-time: sent → resolved; on: sent → Waiting on them). Can be changed on the item page.
+- Reply by: Today / Tomorrow / This week / No rush / Pick a date. Default: This week.
+- Home has a quick-add (Who + Where, Enter; defaults This week, one-time). "More options" opens `/add` with typed values carried over.
+- First visit: "Who do you owe a reply?" quick-add, starter chips (+ Mom, + Group chat, + Recruiter), and one sample item that shows a draft. No tour, never an empty screen. "Saved only in this browser" appears after the first save.
+- Coming back: "Welcome back" greeting with who's waiting. Follow-ups quiet 3+ days come back to the top of Home ("Sent 3 days ago. Follow up?"), then overdue, then the rest. Drafts restored.
+- Wording: "Received 3 days ago. Reply?" + "You said by Fri." Calm tone; overdue = one accent color plus a text label. Counts are computed from the visible list.
 
 ## Pages
-`/` home · `/add` form · `/item/[id]` draft · `/waiting` waiting on them. Shared nav: Drafts · Waiting · + Add.
+`/` home (quick-add + list) · `/add` full form · `/item/[id]` draft · `/waiting` waiting on them. Shared nav: Drafts · Waiting · + Add.
 
 ## Design requirements
 - Forms: one column, a real label on every field, errors next to the field that say what to do next ("Enter who you need to reply to.", not "Invalid input"), and keep what the person typed.

@@ -28,10 +28,10 @@ Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows. The 
 - Home has a quick-add (Who + Where, Enter; defaults This week, one-time). On return visits the list comes first and the full add form sits below it in a collapsed "+ Add someone" panel (open when nothing is left to reply to); no quick-add there. "More options" opens `/add` with typed values carried over.
 - First visit: "Who do you owe a reply?" quick-add, starter chips (+ Mom, + Group chat, + Recruiter), and one sample item that shows a draft. No tour, never an empty screen. "Saved only in this browser" appears after the first save.
 - Coming back: "Welcome back" greeting with who's waiting. Follow-ups quiet 3+ days come back to the top of Home ("Sent 3 days ago. Follow up?"), then overdue, then the rest. Drafts restored.
-- Wording: "Received today (10/18) → Reply by 10/20 · 2 days left" (yesterday shows "yesterday (10/17)", older just "10/12"; due today shows hours left; No rush shows "→ No rush"). Waiting keeps "Sent 3 days ago. Follow up?". Calm tone; overdue = one accent color plus a text label. Counts are computed from the visible list.
+- Wording: "Received today (10/18) → Reply by 10/20 · 2 days left" (yesterday shows "yesterday (10/17)", older just "10/12"; due today shows hours left; No rush shows "→ No rush"). Waiting keeps "Sent 3 days ago. Follow up?". Calm tone; past the reply-by date = the card greys out (still AA-readable) plus a "Past your date" label. Each To reply card has a time bar that drains from the left toward the reply-by date (amber at ≤25% left, solid for No rush, empty grey when past). Where it came from shows as an app icon (Text, Email, Gmail, Mail (iOS), Outlook, Yahoo, Slack, DM, Other) with the name as its label. Counts are computed from the visible list.
 
 ## Pages
-`/` home: a sliding To reply | Waiting switch (tabs) over the list, then "+ Add someone" · `/add` full form · `/item/[id]` draft. No separate `/waiting` page. Shared header: a "Drafts" link home.
+`/` home: a sliding To reply | Waiting switch (tabs) over the list, then "+ Add someone" · `/add` full form · `/item/[id]` draft. No separate `/waiting` page. `/demo` (not linked) replaces saved data with sample drafts from `lib/demo.ts` for testing and walkthroughs. Shared header: a "Drafts" link home.
 
 ## Design requirements
 - Forms: one column, a real label on every field, errors next to the field that say what to do next ("Enter who you need to reply to.", not "Invalid input"), and keep what the person typed.
@@ -39,6 +39,11 @@ Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows. The 
 - Chip groups are radio groups: keyboard operable, labeled.
 - Everything works with a keyboard; text contrast meets WCAG AA.
 - Keep it simple: remove unnecessary steps, fields, and interactions.
+
+## Design system ("calm modern")
+- Tokens live in `app/globals.css` (`@theme`). Use semantic classes, never raw palette colors: `bg-canvas` / `bg-surface` / `bg-subtle`, `text-ink` / `text-ink-soft` / `text-ink-muted`, `border-line` / `border-line-strong`, `bg-accent` (deep teal: primary actions, selection), `outline-focus`, `warn-*` (overdue / no reply), `danger`, `success-*`; `rounded-card`, `rounded-field`, `shadow-card`, `shadow-raised`.
+- All text token pairs are checked to meet WCAG AA.
+- Shared pieces: Avatar (initials), Tag (neutral / accent / warn pills), Tabs (sliding To reply | Waiting switch), TimeBar (reply-window health bar), ChannelIcon (app tiles), plus the components listed above.
 
 ## Storage
 - `drafts:v1`: array of items. `drafts:lastVisit`: ISO timestamp for the greeting.

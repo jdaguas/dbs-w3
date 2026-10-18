@@ -2,11 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Avatar } from "@/components/Avatar";
 import { Banner } from "@/components/Banner";
+import { ChannelIcon } from "@/components/ChannelIcon";
 import { Button, ButtonLink } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
 import { StatusLine } from "@/components/ItemCard";
+import { Tag } from "@/components/Tag";
 import { TextArea } from "@/components/TextField";
+import { TimeBar } from "@/components/TimeBar";
 import {
   dueDateFor,
   FOLLOW_UP_DAYS,
@@ -25,14 +29,14 @@ export function ItemView({ id }: { id: string }) {
   // Set just before navigating away after Delete, so the "not here" message doesn't flash.
   const [leaving, setLeaving] = useState(false);
 
-  if (!store) return <p className="text-zinc-600">Loading your draft…</p>;
+  if (!store) return <p className="text-ink-muted">Loading your draft…</p>;
   const item = store.items.find((i) => i.id === id);
   if (!item) {
     if (leaving) return null;
     return (
       <div className="flex flex-col items-start gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">This draft isn&apos;t here anymore.</h1>
-        <p className="text-zinc-700">It may have been deleted, or saved in a different browser.</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">This draft isn&apos;t here anymore.</h1>
+        <p className="text-ink-soft">It may have been deleted, or saved in a different browser.</p>
         <ButtonLink href="/">Go to Drafts</ButtonLink>
       </div>
     );
@@ -138,32 +142,32 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{item.who}</h1>
-          <span className="shrink-0 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700">
-            {source}
-          </span>
+      <header className="flex items-start gap-4">
+        <Avatar name={item.who} size="lg" muted={overdue} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h1 className="truncate text-2xl font-semibold tracking-tight text-ink">{item.who}</h1>
+            <ChannelIcon item={item} size="lg" />
+          </div>
+          <StatusLine item={item} now={now} className="text-ink-soft" />
+          {item.status === "needs" && <TimeBar item={item} now={now} />}
+          {overdue && (
+            <p>
+              <Tag>Past your date</Tag>
+            </p>
+          )}
         </div>
-        <StatusLine item={item} now={now} className="text-zinc-700" />
-        {overdue && (
-          <p>
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-              Past your date
-            </span>
-          </p>
-        )}
       </header>
 
       {item.message && (
         <section aria-labelledby="about-heading" className="flex flex-col gap-2">
-          <h2 id="about-heading" className="text-sm font-semibold text-zinc-900">
+          <h2 id="about-heading" className="text-sm font-semibold text-ink">
             What it&apos;s about
           </h2>
           <div
             tabIndex={0}
             aria-labelledby="about-heading"
-            className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-indigo-700"
+            className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-field border border-line bg-canvas px-3.5 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
           >
             {item.message}
           </div>
@@ -193,7 +197,7 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
               Copy reply
             </Button>
           </div>
-          <p role="status" className={copy?.ok === false ? "text-sm font-medium text-red-700" : "text-sm text-zinc-700"}>
+          <p role="status" className={copy?.ok === false ? "text-sm font-medium text-danger" : "text-sm text-ink-soft"}>
             {copy?.text}
           </p>
           <Checkbox
@@ -214,10 +218,10 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
         <section aria-label="Waiting on them" className="flex flex-col gap-4">
           {item.draft.trim() && (
             <div className="flex flex-col gap-2">
-              <h2 id="sent-heading" className="text-sm font-semibold text-zinc-900">
+              <h2 id="sent-heading" className="text-sm font-semibold text-ink">
                 What you sent
               </h2>
-              <p className="whitespace-pre-wrap rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-zinc-800">
+              <p className="whitespace-pre-wrap rounded-field border border-line bg-canvas px-3.5 py-2.5 text-ink">
                 {item.draft}
               </p>
             </div>
@@ -238,17 +242,17 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
 
       {item.status === "done" && (
         <section aria-label="Done" className="flex flex-col items-start gap-3">
-          <p className="text-zinc-700">This one&apos;s done. Need to write back again?</p>
+          <p className="text-ink-soft">This one&apos;s done. Need to write back again?</p>
           <Button variant="secondary" onClick={reopen}>
             Move back to To reply
           </Button>
         </section>
       )}
 
-      <section aria-label="Delete" className="border-t border-zinc-200 pt-6">
+      <section aria-label="Delete" className="border-t border-line pt-6">
         {confirmingDelete ? (
           <div role="group" aria-labelledby="delete-question" className="flex flex-col gap-3">
-            <p id="delete-question" className="text-sm font-semibold text-zinc-900">
+            <p id="delete-question" className="text-sm font-semibold text-ink">
               Delete {item.who} and the draft? This can&apos;t be undone.
             </p>
             <div className="flex flex-wrap gap-3">

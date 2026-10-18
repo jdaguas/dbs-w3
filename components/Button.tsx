@@ -5,13 +5,13 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-full px-5 min-h-11 text-sm font-semibold transition-colors " +
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed";
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50 disabled:cursor-not-allowed";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-zinc-900 text-white hover:bg-zinc-700",
-  secondary: "border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-100",
-  ghost: "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900",
-  danger: "border border-red-200 bg-white text-red-700 hover:bg-red-50",
+  primary: "bg-accent text-white shadow-card hover:bg-accent-hover",
+  secondary: "border border-line-strong bg-surface text-ink shadow-card hover:border-line-hover hover:bg-canvas",
+  ghost: "text-ink-soft hover:bg-subtle hover:text-ink",
+  danger: "border border-danger-line bg-surface text-danger hover:bg-danger-soft",
 };
 
 type CommonProps = { variant?: Variant; full?: boolean; className?: string; children: ReactNode };

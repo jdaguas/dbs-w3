@@ -143,6 +143,19 @@ export function replyByLabel(dueDate: string, now = new Date()) {
   return { date: shortDate(fromISODate(dueDate)), left };
 }
 
+/**
+ * How much of the reply window is left, for the time bar: 1 = just received,
+ * 0 = past the date (the window ends at midnight after the reply-by day). null = No rush.
+ */
+export function timeLeftFraction(item: Pick<Item, "dueDate" | "createdAt">, now = new Date()) {
+  if (!item.dueDate) return null;
+  const due = fromISODate(item.dueDate);
+  const end = new Date(due.getFullYear(), due.getMonth(), due.getDate() + 1).getTime();
+  const total = end - new Date(item.createdAt).getTime();
+  if (total <= 0) return 0;
+  return Math.min(1, Math.max(0, (end - now.getTime()) / total));
+}
+
 // ---- Derived state ----
 
 export function isDrafting(item: Item) {

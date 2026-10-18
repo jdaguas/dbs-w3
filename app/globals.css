@@ -1,5 +1,56 @@
 @import "tailwindcss";
 
+/*
+ * Drafts design system: "calm modern".
+ * Use these semantic names (bg-surface, text-ink-muted, bg-accent…) instead of raw
+ * palette colors, so the look can change in one place. Text pairs meet WCAG AA:
+ *   ink / ink-soft / ink-muted on canvas, surface, and subtle (≥ 4.5:1)
+ *   white on accent (5.5:1) · accent-ink on accent-soft · warn-ink on warn-soft · danger on surface
+ */
+@theme {
+  /* Surfaces */
+  --color-canvas: #f6f8fa; /* page background */
+  --color-surface: #ffffff; /* cards, inputs, header */
+  --color-subtle: #eef2f5; /* tracks, tags, quiet fills */
+
+  /* Text */
+  --color-ink: #0f172a; /* headings, primary text */
+  --color-ink-soft: #334155; /* body text */
+  --color-ink-muted: #526070; /* hints, metadata */
+
+  /* Lines */
+  --color-line: #e2e8f0;
+  --color-line-strong: #cbd5e1;
+  --color-line-hover: #94a3b8;
+
+  /* Accent: deep teal, for primary actions, selection, and focus */
+  --color-accent: #0f766e;
+  --color-accent-hover: #115e59;
+  --color-accent-soft: #e6f4f2;
+  --color-accent-ink: #0b4f4a;
+  --color-focus: #0f766e;
+
+  /* Status: overdue / no reply (one calm accent, always with a text label) */
+  --color-warn-soft: #fdf3dc;
+  --color-warn-line: #f0c76e;
+  --color-warn-ink: #7a3e09;
+  --color-warn: #d98a04; /* time bar when little time is left (graphic, not text) */
+
+  --color-danger: #b42318;
+  --color-danger-soft: #fef1f0;
+  --color-danger-line: #f5c2bd;
+
+  --color-success-soft: #e8f6ee;
+  --color-success-line: #b5e0c6;
+  --color-success-ink: #14532d;
+
+  /* Shape and depth */
+  --radius-card: 1rem;
+  --radius-field: 0.75rem;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-raised: 0 2px 4px rgb(15 23 42 / 0.05), 0 8px 20px -6px rgb(15 23 42 / 0.12);
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
@@ -9,7 +60,7 @@
 }
 
 body {
-  background: var(--color-zinc-50);
-  color: var(--color-zinc-900);
+  background: var(--color-canvas);
+  color: var(--color-ink);
   font-family: var(--font-sans);
 }

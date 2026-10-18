@@ -2,8 +2,8 @@ import type { ComponentProps, Ref } from "react";
 import { describedBy, Field } from "./Field";
 
 const inputClass =
-  "w-full rounded-xl border bg-white px-3.5 py-2.5 text-base text-zinc-900 placeholder:text-zinc-500 " +
-  "focus:outline-2 focus:outline-offset-1 focus:outline-indigo-700";
+  "w-full rounded-field border bg-surface px-3.5 py-2.5 text-base text-ink placeholder:text-ink-muted " +
+  "focus:outline-2 focus:outline-offset-1 focus:outline-focus";
 
 type Shared = {
   id: string;
@@ -35,7 +35,7 @@ export function TextField({
         onChange={(e) => onValueChange(e.target.value)}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
-        className={`${inputClass} ${error ? "border-red-700" : "border-zinc-300"}`}
+        className={`${inputClass} ${error ? "border-danger" : "border-line-strong"}`}
         {...props}
       />
     </Field>
@@ -60,7 +60,7 @@ export function TextArea({
         onChange={(e) => onValueChange(e.target.value)}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
-        className={`${inputClass} min-h-28 resize-y leading-relaxed ${error ? "border-red-700" : "border-zinc-300"}`}
+        className={`${inputClass} min-h-28 resize-y leading-relaxed ${error ? "border-danger" : "border-line-strong"}`}
         {...props}
       />
     </Field>

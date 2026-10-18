@@ -17,7 +17,7 @@ export function describedBy(id: string, hint?: string, error?: string) {
 
 export function Hint({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <p id={hintId(id)} className="text-sm text-zinc-600">
+    <p id={hintId(id)} className="text-sm text-ink-muted">
       {children}
     </p>
   );
@@ -25,10 +25,10 @@ export function Hint({ id, children }: { id: string; children: ReactNode }) {
 
 export function ErrorText({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <p id={errorId(id)} className="flex items-start gap-1.5 text-sm font-medium text-red-700">
+    <p id={errorId(id)} className="flex items-start gap-1.5 text-sm font-medium text-danger">
       <span
         aria-hidden="true"
-        className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-red-700 text-[11px] font-bold text-white"
+        className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-danger text-[11px] font-bold text-white"
       >
         !
       </span>
@@ -41,7 +41,7 @@ function LabelText({ label, optional }: { label: string; optional?: boolean }) {
   return (
     <>
       {label}
-      {optional && <span className="font-normal text-zinc-600"> (optional)</span>}
+      {optional && <span className="font-normal text-ink-muted"> (optional)</span>}
     </>
   );
 }
@@ -64,7 +64,7 @@ export function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-semibold text-zinc-900">
+      <label htmlFor={id} className="text-sm font-semibold text-ink">
         <LabelText label={label} optional={optional} />
       </label>
       {hint && <Hint id={id}>{hint}</Hint>}
@@ -92,7 +92,7 @@ export function Fieldset({
 }) {
   return (
     <fieldset className="flex flex-col gap-1.5" aria-describedby={describedBy(id, hint, error)}>
-      <legend className="mb-1.5 text-sm font-semibold text-zinc-900">
+      <legend className="mb-1.5 text-sm font-semibold text-ink">
         <LabelText label={legend} optional={optional} />
       </legend>
       {hint && <Hint id={id}>{hint}</Hint>}

@@ -105,6 +105,11 @@ export function removeItem(id: string) {
   save(getSnapshot().items.filter((i) => i.id !== id));
 }
 
+/** Swap in a whole list (used by /demo to load sample drafts). */
+export function replaceItems(items: Item[]) {
+  save(items);
+}
+
 // ---- Small flags (not part of the item list) ----
 
 function readFlag(key: string) {

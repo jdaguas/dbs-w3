@@ -44,10 +44,10 @@ export function Tabs<T extends string>({
   }
 
   return (
-    <div role="tablist" aria-label={label} onKeyDown={onKeyDown} className="relative flex rounded-full bg-zinc-100 p-1">
+    <div role="tablist" aria-label={label} onKeyDown={onKeyDown} className="relative flex rounded-full bg-subtle p-1">
       <span
         aria-hidden="true"
-        className="absolute inset-y-1 left-1 rounded-full bg-white shadow-sm ring-1 ring-zinc-200 transition-transform duration-200 ease-out motion-reduce:transition-none"
+        className="absolute inset-y-1 left-1 rounded-full bg-surface shadow-sm ring-1 ring-line transition-transform duration-200 ease-out motion-reduce:transition-none"
         style={{ width: `calc((100% - 0.5rem) / ${tabs.length})`, transform: `translateX(${index * 100}%)` }}
       />
       {tabs.map((tab, i) => {
@@ -67,8 +67,8 @@ export function Tabs<T extends string>({
             onClick={() => onValueChange(tab.value)}
             className={
               "relative flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors " +
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 " +
-              (selected ? "text-zinc-900" : "text-zinc-600 hover:text-zinc-900")
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus " +
+              (selected ? "text-ink" : "text-ink-muted hover:text-ink")
             }
           >
             {tab.label}
@@ -87,7 +87,7 @@ export function TabPanel({ id, value, children }: { id: string; value: string; c
       id={panelId(id, value)}
       aria-labelledby={tabId(id, value)}
       tabIndex={0}
-      className="rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-700"
+      className="rounded-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus"
     >
       {children}
     </div>

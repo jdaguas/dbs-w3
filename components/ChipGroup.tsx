@@ -44,9 +44,9 @@ export function ChipGroup<T extends string>({
             <span
               className={
                 "inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-medium transition-colors " +
-                "border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-100 " +
-                "peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white " +
-                "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-indigo-700"
+                "border-line-strong bg-surface text-ink hover:bg-subtle " +
+                "peer-checked:border-accent peer-checked:bg-accent peer-checked:text-white " +
+                "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus"
               }
             >
               {option.label}

@@ -3,12 +3,24 @@ import Link from "next/link";
 // Shared header. Both lists (To reply, Waiting) live on Home, so there's one place to go back to.
 export function Nav() {
   return (
-    <header className="border-b border-zinc-200 bg-white/90 backdrop-blur">
-      <nav aria-label="Main" className="mx-auto flex max-w-xl items-center px-4 py-3">
+    <header className="sticky top-0 z-10 border-b border-line bg-surface/85 backdrop-blur">
+      <nav aria-label="Main" className="mx-auto flex max-w-xl items-center px-4 py-2.5">
         <Link
           href="/"
-          className="rounded-full px-1 py-2 text-base font-semibold tracking-tight text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+          className="flex items-center gap-2.5 rounded-full py-1.5 pr-2 text-base font-semibold tracking-tight text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
+          <span aria-hidden="true" className="flex size-8 items-center justify-center rounded-[10px] bg-accent text-white shadow-card">
+            {/* A speech bubble with a pencil line: a reply in progress. */}
+            <svg viewBox="0 0 20 20" fill="none" className="size-4.5">
+              <path
+                d="M4 4.5h12a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H9l-3.5 3v-3H4A1.5 1.5 0 0 1 2.5 13V6A1.5 1.5 0 0 1 4 4.5Z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+              <path d="M6.5 9.5h7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </span>
           Drafts
         </Link>
       </nav>

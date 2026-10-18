@@ -16,7 +16,7 @@ import { addItem, addedFlash, clearFlash, getPreviousVisit, peekFlash, useStore,
 
 export default function Home() {
   const store = useStore();
-  if (!store) return <p className="text-zinc-600">Loading your drafts…</p>;
+  if (!store) return <p className="text-ink-muted">Loading your drafts…</p>;
   return <HomeContent store={store} />;
 }
 
@@ -66,11 +66,15 @@ type List = "reply" | "waiting";
 let lastList: List = "reply";
 
 function Count({ n }: { n: number }) {
-  return <span className="font-normal text-zinc-600">({n})</span>;
+  return (
+    <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-accent-soft px-1.5 text-xs font-semibold text-accent-ink">
+      {n}
+    </span>
+  );
 }
 
 function EmptyList({ children }: { children: ReactNode }) {
-  return <p className="rounded-2xl border border-zinc-200 bg-white px-4 py-6 text-center text-zinc-700">{children}</p>;
+  return <p className="rounded-card border border-line bg-surface px-4 py-6 text-center text-ink-soft">{children}</p>;
 }
 
 function CardList({ items, now }: { items: Item[]; now: Date }) {
@@ -148,17 +152,17 @@ function HomeContent({ store }: { store: Store }) {
         {warning}
         <section aria-labelledby="add-heading" className="flex flex-col gap-4">
           <div>
-            <h1 id="add-heading" className="text-2xl font-semibold tracking-tight text-zinc-900">
+            <h1 id="add-heading" className="text-2xl font-semibold tracking-tight text-ink">
               Who do you owe a reply?
             </h1>
-            <p className="mt-1 text-zinc-700">
+            <p className="mt-1 text-ink-soft">
               Log messages you can&apos;t answer yet. Write back when you have a minute.
             </p>
           </div>
           <QuickAdd onAdded={confirm} />
           {flashBanner}
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-semibold text-zinc-900">Or start with:</p>
+            <p className="text-sm font-semibold text-ink">Or start with:</p>
             <div className="flex flex-wrap gap-2">
               {STARTERS.map((s) => (
                 <Button key={s.who} variant="secondary" className="min-h-10 px-4" onClick={() => addStarter(s)}>
@@ -166,16 +170,16 @@ function HomeContent({ store }: { store: Store }) {
                 </Button>
               ))}
             </div>
-            <p className="text-sm text-zinc-600">Tap one and it&apos;s on your list.</p>
+            <p className="text-sm text-ink-muted">Tap one and it&apos;s on your list.</p>
           </div>
         </section>
 
         <section aria-labelledby="example-heading" className="flex flex-col gap-3">
-          <h2 id="example-heading" className="text-lg font-semibold text-zinc-900">
+          <h2 id="example-heading" className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             What an item looks like
           </h2>
           <ItemCard item={exampleItem(now)} now={now} example />
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-ink-muted">
             Start a reply whenever you have a minute, copy it into the real app, then mark it sent.
           </p>
         </section>
@@ -196,8 +200,8 @@ function HomeContent({ store }: { store: Store }) {
 
       {followUps.length > 0 && (
         <section aria-labelledby="followup-heading" className="flex flex-col gap-3">
-          <h2 id="followup-heading" className="text-lg font-semibold text-zinc-900">
-            Follow up <span className="font-normal text-zinc-600">({followUps.length})</span>
+          <h2 id="followup-heading" className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+            Follow up · {followUps.length}
           </h2>
           <CardList items={followUps} now={now} />
         </section>
@@ -229,7 +233,7 @@ function HomeContent({ store }: { store: Store }) {
           ) : (
             <div className="flex flex-col gap-3">
               <CardList items={waiting} now={now} />
-              <p className="text-sm text-zinc-600">
+              <p className="text-sm text-ink-muted">
                 {plural(sentThisWeek(store.items, now), "reply", "replies")} sent this week.
               </p>
             </div>
@@ -241,17 +245,20 @@ function HomeContent({ store }: { store: Store }) {
       <details
         open={addOpen}
         onToggle={(e) => e.currentTarget.open !== addOpen && toggleAdd(e.currentTarget.open)}
-        className="group rounded-2xl border border-zinc-200 bg-white"
+        className="group rounded-card border border-line bg-surface shadow-card"
       >
-        <summary id="add-summary" className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-4 font-semibold text-zinc-900 hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 [&::-webkit-details-marker]:hidden">
-          <span>
-            <span aria-hidden="true">+</span> Add someone
+        <summary id="add-summary" className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 font-semibold text-ink hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
+          <span className="flex items-center gap-2.5">
+            <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-accent text-base leading-none text-white">
+              +
+            </span>
+            Add someone
           </span>
-          <span aria-hidden="true" className="text-zinc-600 transition-transform group-open:rotate-180">
+          <span aria-hidden="true" className="text-ink-muted transition-transform group-open:rotate-180">
             ▾
           </span>
         </summary>
-        <div className="flex flex-col gap-4 border-t border-zinc-200 px-4 pb-4 pt-4">
+        <div className="flex flex-col gap-4 border-t border-line px-4 pb-4 pt-4">
           {/* Mounted only while open, so it starts empty each time. */}
           {addOpen && <AddForm onAdded={closeAdd} onCancel={() => closeAdd()} />}
         </div>

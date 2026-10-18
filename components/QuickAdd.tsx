@@ -72,12 +72,12 @@ export function QuickAdd({ onAdded }: { onAdded: (item: Item) => void }) {
         <Button type="submit">Add</Button>
         <Link
           href={moreHref}
-          className="rounded text-sm font-medium text-zinc-700 underline underline-offset-4 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+          className="rounded text-sm font-medium text-ink-soft underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           More options: reply by, notes, draft
         </Link>
       </div>
-      <p className="text-sm text-zinc-600">Quick adds are due this week. Use More options to pick a different date.</p>
+      <p className="text-sm text-ink-muted">Quick adds are due this week. Use More options to pick a different date.</p>
     </form>
   );
 }

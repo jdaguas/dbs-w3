@@ -5,9 +5,8 @@ import { useState, type FormEvent } from "react";
 import { Button, ButtonLink } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
 import { ChipGroup, chipId } from "@/components/ChipGroup";
-import { TextField } from "@/components/TextField";
+import { TextArea, TextField } from "@/components/TextField";
 import {
-  ABOUT_MAX,
   CHANNELS,
   createItem,
   dueDateFor,
@@ -28,7 +27,8 @@ export function AddForm({ initialWho, initialChannel }: { initialWho: string; in
     who: initialWho,
     channel: initialChannel,
     emailApp: "",
-    about: "",
+    message: "",
+    draft: "",
     replyBy: "week",
     pickedDate: "",
   });
@@ -48,11 +48,13 @@ export function AddForm({ initialWho, initialChannel }: { initialWho: string; in
       ? "who"
       : errs.channel
         ? chipId("channel", input.channel || CHANNELS[0].value)
-        : errs.about
-          ? "about"
-          : errs.replyBy
-            ? "pickedDate"
-            : null;
+        : errs.message
+            ? "message"
+            : errs.draft
+              ? "draft"
+              : errs.replyBy
+                ? "pickedDate"
+                : null;
     if (target) document.getElementById(target)?.focus();
   }
 
@@ -69,7 +71,8 @@ export function AddForm({ initialWho, initialChannel }: { initialWho: string; in
       who: input.who,
       channel: input.channel as Channel,
       emailApp: input.emailApp,
-      about: input.about,
+      message: input.message,
+      draft: input.draft.trim() ? input.draft : "",
       dueDate: dueDateFor(input.replyBy, input.pickedDate),
       ongoing,
     });
@@ -110,16 +113,24 @@ export function AddForm({ initialWho, initialChannel }: { initialWho: string; in
         />
       )}
 
-      <TextField
-        id="about"
+      <TextArea
+        id="message"
         label="What's it about?"
         optional
-        placeholder="Dinner Sunday?"
-        value={input.about}
-        onValueChange={(about) => update({ about })}
-        error={errors.about}
-        hint={`Up to ${ABOUT_MAX} characters.`}
-        autoComplete="off"
+        hint="A quick note like “Dinner Sunday?”, or paste the whole email or text."
+        value={input.message}
+        onValueChange={(message) => update({ message })}
+        error={errors.message}
+      />
+
+      <TextArea
+        id="draft"
+        label="Your reply"
+        optional
+        hint="Start it now, or leave it for later."
+        value={input.draft}
+        onValueChange={(draft) => update({ draft })}
+        error={errors.draft}
       />
 
       <div className="flex flex-col gap-3">

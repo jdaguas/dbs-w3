@@ -10,7 +10,7 @@ export type Item = {
   who: string;
   channel: Channel;
   emailApp?: EmailApp; // only when channel is "email"
-  about?: string;
+  message?: string; // "What's it about?": a quick note or the whole pasted message
   dueDate: string | null; // local YYYY-MM-DD; null = No rush
   draft: string; // non-empty + status "needs" ⇒ shown as Drafting
   ongoing: boolean; // "Keep tracking after I reply"
@@ -45,7 +45,7 @@ export const REPLY_BY: { value: ReplyBy; label: string }[] = [
 ];
 
 export const WHO_MAX = 40;
-export const ABOUT_MAX = 80;
+export const TEXT_MAX = 5000; // pasted message and reply draft
 export const FOLLOW_UP_DAYS = 3;
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -173,7 +173,7 @@ export function createItem(input: {
   who: string;
   channel: Channel;
   emailApp?: EmailApp | "";
-  about?: string;
+  message?: string;
   dueDate: string | null;
   ongoing: boolean;
   draft?: string;
@@ -183,7 +183,7 @@ export function createItem(input: {
     who: input.who.trim(),
     channel: input.channel,
     emailApp: input.channel === "email" && input.emailApp ? input.emailApp : undefined,
-    about: input.about?.trim() || undefined,
+    message: input.message?.trim() || undefined,
     dueDate: input.dueDate,
     draft: input.draft ?? "",
     ongoing: input.ongoing,
@@ -198,12 +198,13 @@ export type ItemInput = {
   who: string;
   channel: Channel | "";
   emailApp: EmailApp | "";
-  about: string;
+  message: string;
+  draft: string;
   replyBy: ReplyBy;
   pickedDate: string;
 };
 
-export type ItemErrors = Partial<Record<"who" | "channel" | "about" | "replyBy", string>>;
+export type ItemErrors = Partial<Record<"who" | "channel" | "message" | "draft" | "replyBy", string>>;
 
 export function validateItem(input: ItemInput, now = new Date()): ItemErrors {
   const errors: ItemErrors = {};
@@ -213,7 +214,10 @@ export function validateItem(input: ItemInput, now = new Date()): ItemErrors {
 
   if (!input.channel) errors.channel = "Pick where the message came from.";
 
-  if (input.about.trim().length > ABOUT_MAX) errors.about = `Keep this under ${ABOUT_MAX} characters.`;
+  if (input.message.trim().length > TEXT_MAX)
+    errors.message = `Paste just the part you're replying to (under ${TEXT_MAX.toLocaleString()} characters).`;
+  if (input.draft.trim().length > TEXT_MAX)
+    errors.draft = `Shorten your reply to under ${TEXT_MAX.toLocaleString()} characters.`;
 
   if (input.replyBy === "date") {
     if (!input.pickedDate) errors.replyBy = "Choose a date, or pick one of the options above.";

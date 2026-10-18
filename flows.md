@@ -76,7 +76,8 @@ Shared nav on every page: **Drafts · Waiting**, with the current page highlight
 | Who (required) | Text | "Enter who you need to reply to." · "Keep the name under 40 characters." |
 | Where (required) | Text / Email / Slack / DM / Other | "Pick where the message came from." |
 | Which email app? (optional, only when Where = Email) | Gmail / Mail (iOS) / Outlook / Yahoo / Other | None. Cards show the app ("Gmail") instead of "Email" |
-| About (optional) | Text | "Keep this under 80 characters." |
+| What's it about? (optional) | Free text box: a quick note ("Dinner Sunday?") or the whole pasted email/text | "Paste just the part you're replying to (under 5,000 characters)." |
+| Your reply (optional) | Large text box: start the draft now or later | "Shorten your reply to under 5,000 characters." |
 | Reply by (required) | Today / Tomorrow / This week / No rush / Pick a date (default: This week) | "Choose a date, or pick one of the options above." · "Pick today or a later date." |
 | Keep tracking after I reply | Checkbox beside Reply by (default: off = one-time) | None |
 

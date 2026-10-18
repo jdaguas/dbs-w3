@@ -60,7 +60,7 @@ export function TextArea({
         onChange={(e) => onValueChange(e.target.value)}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, hint, error)}
-        className={`${inputClass} min-h-40 resize-y leading-relaxed ${error ? "border-red-700" : "border-zinc-300"}`}
+        className={`${inputClass} min-h-28 resize-y leading-relaxed ${error ? "border-red-700" : "border-zinc-300"}`}
         {...props}
       />
     </Field>

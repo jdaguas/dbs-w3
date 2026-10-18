@@ -23,6 +23,7 @@ Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows. The 
 - Item states: Needs reply → Drafting (has unsent draft text) → Sent → Waiting on them (ongoing conversations only).
 - "Keep tracking after I reply" checkbox (default off = one-time: sent → resolved; on: sent → Waiting on them). Can be changed on the item page.
 - Where: Text / Email / Slack / DM / Other. Picking Email shows an optional "Which email app?" (Gmail / Mail (iOS) / Outlook / Yahoo / Other); cards then show the app name.
+- The add form has two optional text boxes: "What's it about?" (free text: a quick note or the whole pasted email/text) and "Your reply" (start the draft now or later; a draft makes the item Drafting). No file upload. Cards preview "What's it about?" on one line.
 - Reply by: Today / Tomorrow / This week / No rush / Pick a date. Default: This week.
 - Home has a quick-add (Who + Where, Enter; defaults This week, one-time). "More options" opens `/add` with typed values carried over.
 - First visit: "Who do you owe a reply?" quick-add, starter chips (+ Mom, + Group chat, + Recruiter), and one sample item that shows a draft. No tour, never an empty screen. "Saved only in this browser" appears after the first save.

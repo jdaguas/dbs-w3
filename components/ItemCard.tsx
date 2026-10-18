@@ -34,7 +34,9 @@ export function ItemCard({ item, now = new Date() }: { item: Item; now?: Date })
         </span>
       </div>
 
-      {item.about && <p className="mt-0.5 truncate text-sm text-zinc-700">{item.about}</p>}
+      {item.message && (
+        <p className="mt-0.5 truncate text-sm text-zinc-700">{item.message.replace(/\s+/g, " ").trim()}</p>
+      )}
 
       <p className="mt-1.5 text-sm text-zinc-700">
         {statusLine(item, now)}

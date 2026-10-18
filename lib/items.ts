@@ -5,6 +5,9 @@ export type EmailApp = "gmail" | "apple" | "outlook" | "yahoo" | "other";
 export type Status = "needs" | "waiting" | "done";
 export type ReplyBy = "today" | "tomorrow" | "week" | "none" | "date";
 
+/** One step in the conversation, for the history on the item page. */
+export type LogEntry = { kind: "received" | "sent" | "followUp" | "theyReplied"; at: string; text?: string };
+
 export type Item = {
   id: string;
   who: string;
@@ -15,6 +18,7 @@ export type Item = {
   dueAt?: string; // exact deadline after a boost; overrides the end of dueDate
   boostStart?: string; // when the latest boost was given (the time bar refills from here)
   boosts?: number; // how many boosts so far; each one gives more time
+  log?: LogEntry[]; // the conversation so far; built from createdAt/message/sentAt until the first action
   draft: string; // non-empty + status "needs" ⇒ shown as Drafting
   ongoing: boolean; // "Keep tracking after I reply"
   status: Status;
@@ -271,6 +275,21 @@ export function dateLabel(item: Item, now = new Date()) {
 export function statusLine(item: Item, now = new Date()) {
   if (item.status === "waiting") return isFollowUpDue(item, now) ? "No reply yet. Follow up?" : "Waiting on them";
   return "Done";
+}
+
+// ---- Conversation history ----
+
+/** The conversation so far, oldest first. Items saved before the log existed get one from their fields. */
+export function historyOf(item: Item): LogEntry[] {
+  if (item.log) return item.log;
+  const history: LogEntry[] = [{ kind: "received", at: item.createdAt, text: item.message }];
+  if (item.sentAt && item.status !== "needs") history.push({ kind: "sent", at: item.sentAt, text: item.draft.trim() || undefined });
+  return history;
+}
+
+/** The log with one more step added (text is optional and trimmed). */
+export function withEntry(item: Item, kind: LogEntry["kind"], text = "", at = new Date()): LogEntry[] {
+  return [...historyOf(item), { kind, at: at.toISOString(), text: text.trim() || undefined }];
 }
 
 export function followUpsDue(items: Item[], now = new Date()) {

@@ -33,6 +33,8 @@ Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows. The 
 
 - Boost: a past-due reply shows a "+4 hours" button (on the card and the item page). Each tap gives more than the last (4 hours → 8 hours → 1 day at a time), sets an exact deadline (`dueAt`), and refills the time bar. "They replied" and reopening clear the boost.
 
+- Waiting items: opening one only shows it (nothing is pre-selected or changed). The item page shows the Conversation (their messages left, yours right, each with a date) and asks "Action taken?": I followed up (optional "What did you send?"; resets the sent date and the 3-day countdown), They replied (optional "What did they say?", then "Do you want to reply?": Yes → back to To reply with a fresh draft, received today, due this week; No → done), or Resolve. The history is stored per item in `log`.
+
 ## Pages
 `/` home: a sliding To reply | Waiting switch (tabs) over the list, then "+ Add someone" · `/add` full form · `/item/[id]` draft. No separate `/waiting` page. `/demo` (not linked) replaces saved data with sample drafts from `lib/demo.ts` for testing and walkthroughs. Shared header: a "Drafts" link home.
 

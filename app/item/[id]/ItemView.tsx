@@ -7,11 +7,16 @@ import { BoostButton } from "@/components/BoostButton";
 import { ChannelIcon } from "@/components/ChannelIcon";
 import { Button, ButtonLink } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
+import { ChipGroup } from "@/components/ChipGroup";
+import { Conversation } from "@/components/Conversation";
 import { StatusLine } from "@/components/ItemCard";
 import { TextArea } from "@/components/TextField";
 import { TimeBar } from "@/components/TimeBar";
 import {
   canBoost,
+  historyOf,
+  shortDate,
+  withEntry,
   dateLabel,
   dueDateFor,
   NO_BOOST,
@@ -66,6 +71,7 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const overdue = isOverdue(item, now);
   const source = sourceLabel(item);
+  const history = historyOf(item);
 
   function changeDraft(value: string) {
     setDraft(value);
@@ -99,35 +105,26 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
   }
 
   function markSent() {
-    const sentAt = new Date().toISOString();
+    const at = new Date();
+    const sentAt = at.toISOString();
+    const log = withEntry(item, "sent", draft, at);
     if (item.ongoing) {
-      updateItem(item.id, { status: "waiting", sentAt, waitingSince: sentAt });
+      updateItem(item.id, { status: "waiting", sentAt, waitingSince: sentAt, log });
       leaveWith(
         `Sent to ${item.who}. It's in Waiting now.`,
         `If ${item.who} goes quiet for ${FOLLOW_UP_DAYS} days, it comes back to the top here.`,
       );
     } else {
-      updateItem(item.id, { status: "done", sentAt });
+      updateItem(item.id, { status: "done", sentAt, log });
       leaveWith(`Replied to ${item.who}. That's off your list.`);
     }
   }
 
-  // Waiting → back to To reply with a fresh draft (a follow-up, or answering their reply).
-  function backToReply(theyReplied: boolean) {
+  // From "They replied → Yes": the page switches to the reply box with a fresh draft.
+  function startReply() {
     setDraft("");
     setCopy(null);
-    updateItem(item.id, {
-      status: "needs",
-      draft: "",
-      waitingSince: undefined,
-      ...(theyReplied && { createdAt: new Date().toISOString(), dueDate: dueDateFor("week", ""), ...NO_BOOST }),
-    });
     focusDraft();
-  }
-
-  function resolve() {
-    updateItem(item.id, { status: "done" });
-    leaveWith(`Resolved your conversation with ${item.who}.`);
   }
 
   function reopen() {
@@ -165,19 +162,28 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
         )}
       </header>
 
-      {item.message && (
-        <section aria-labelledby="about-heading" className="flex flex-col gap-2">
-          <h2 id="about-heading" className="text-sm font-semibold text-ink">
-            What it&apos;s about
+      {history.length > 1 ? (
+        <section aria-labelledby="conversation-heading" className="flex flex-col gap-3">
+          <h2 id="conversation-heading" className="text-sm font-semibold text-ink">
+            Conversation
           </h2>
-          <div
-            tabIndex={0}
-            aria-labelledby="about-heading"
-            className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-field border border-line bg-canvas px-3.5 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
-          >
-            {item.message}
-          </div>
+          <Conversation history={history} now={now} />
         </section>
+      ) : (
+        item.message && (
+          <section aria-labelledby="about-heading" className="flex flex-col gap-2">
+            <h2 id="about-heading" className="text-sm font-semibold text-ink">
+              What it&apos;s about
+            </h2>
+            <div
+              tabIndex={0}
+              aria-labelledby="about-heading"
+              className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-field border border-line bg-canvas px-3.5 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+            >
+              {item.message}
+            </div>
+          </section>
+        )
       )}
 
       {item.status === "needs" && (
@@ -220,31 +226,7 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
         </section>
       )}
 
-      {item.status === "waiting" && (
-        <section aria-label="Waiting on them" className="flex flex-col gap-4">
-          {item.draft.trim() && (
-            <div className="flex flex-col gap-2">
-              <h2 id="sent-heading" className="text-sm font-semibold text-ink">
-                What you sent
-              </h2>
-              <p className="whitespace-pre-wrap rounded-field border border-line bg-canvas px-3.5 py-2.5 text-ink">
-                {item.draft}
-              </p>
-            </div>
-          )}
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button onClick={() => backToReply(true)} full className="sm:w-auto">
-              They replied. I need to answer
-            </Button>
-            <Button variant="secondary" onClick={() => backToReply(false)} full className="sm:w-auto">
-              Write a follow-up
-            </Button>
-            <Button variant="secondary" onClick={resolve} full className="sm:w-auto">
-              Resolve conversation
-            </Button>
-          </div>
-        </section>
-      )}
+      {item.status === "waiting" && <WaitingActions item={item} onReply={startReply} leaveWith={leaveWith} />}
 
       {item.status === "done" && (
         <section aria-label="Done" className="flex flex-col items-start gap-3">
@@ -277,5 +259,151 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
         )}
       </section>
     </div>
+  );
+}
+
+type Action = "followUp" | "replied" | "resolve";
+
+const ACTIONS: { value: Action; label: string }[] = [
+  { value: "followUp", label: "I followed up" },
+  { value: "replied", label: "They replied" },
+  { value: "resolve", label: "Resolve" },
+];
+
+// Waiting: opening the item just shows it. Nothing changes until the person says what happened.
+function WaitingActions({
+  item,
+  onReply,
+  leaveWith,
+}: {
+  item: Item;
+  onReply: () => void;
+  leaveWith: (title: string, detail?: string) => void;
+}) {
+  const [action, setAction] = useState<Action | "">("");
+  const [note, setNote] = useState("");
+  const [saved, setSaved] = useState("");
+  const noteError = note.trim().length > TEXT_MAX ? `Paste just the part you need (under ${TEXT_MAX.toLocaleString()} characters).` : undefined;
+
+  function choose(next: Action) {
+    setAction(next);
+    setNote("");
+    setSaved("");
+  }
+
+  function cancel() {
+    setAction("");
+    setNote("");
+  }
+
+  function saveFollowUp() {
+    if (noteError) return document.getElementById("action-note")?.focus();
+    const at = new Date();
+    updateItem(item.id, { log: withEntry(item, "followUp", note, at), sentAt: at.toISOString(), waitingSince: at.toISOString() });
+    cancel();
+    setSaved(`Follow-up saved. The sent date is now today, ${shortDate(at)}, and the ${FOLLOW_UP_DAYS}-day countdown starts over.`);
+  }
+
+  function theyReplied(wantToReply: boolean) {
+    if (noteError) return document.getElementById("action-note")?.focus();
+    const at = new Date();
+    const log = withEntry(item, "theyReplied", note, at);
+    if (wantToReply) {
+      updateItem(item.id, {
+        status: "needs",
+        log,
+        message: note.trim() || item.message,
+        createdAt: at.toISOString(),
+        dueDate: dueDateFor("week", "", at),
+        draft: "",
+        waitingSince: undefined,
+        ...NO_BOOST,
+      });
+      onReply();
+    } else {
+      updateItem(item.id, { status: "done", log });
+      leaveWith(`All set with ${item.who}.`, "Their reply is saved in the conversation.");
+    }
+  }
+
+  function resolve() {
+    updateItem(item.id, { status: "done" });
+    leaveWith(`Resolved your conversation with ${item.who}.`);
+  }
+
+  return (
+    <section aria-label="Action taken" className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4 shadow-card">
+      <ChipGroup
+        name="action"
+        legend="Action taken?"
+        hint="Nothing changes until you pick one."
+        options={ACTIONS}
+        value={action}
+        onValueChange={choose}
+      />
+
+      {action === "followUp" && (
+        <div className="flex flex-col gap-3">
+          <TextArea
+            id="action-note"
+            label="What did you send?"
+            optional
+            hint="Saved in the conversation so you can see it later."
+            value={note}
+            onValueChange={setNote}
+            error={noteError}
+            rows={3}
+          />
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={saveFollowUp}>Save follow-up</Button>
+            <Button variant="ghost" onClick={cancel}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {action === "replied" && (
+        <div className="flex flex-col gap-4">
+          <TextArea
+            id="action-note"
+            label="What did they say?"
+            optional
+            hint="Paste their reply to keep it in the conversation."
+            value={note}
+            onValueChange={setNote}
+            error={noteError}
+            rows={3}
+          />
+          <div role="group" aria-labelledby="reply-question" className="flex flex-col gap-2">
+            <p id="reply-question" className="text-sm font-semibold text-ink">
+              Do you want to reply?
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => theyReplied(true)}>Yes, write a reply</Button>
+              <Button variant="secondary" onClick={() => theyReplied(false)}>
+                No, we&apos;re all set
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {action === "resolve" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-ink-soft">This takes {item.who} off Waiting. The conversation stays saved.</p>
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={resolve}>Resolve conversation</Button>
+            <Button variant="ghost" onClick={cancel}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <p role="status" className="text-sm text-success-ink empty:hidden">
+        {saved}
+      </p>
+    </section>
   );
 }

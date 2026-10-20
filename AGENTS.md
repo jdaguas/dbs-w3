@@ -36,7 +36,7 @@ Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows. The 
 - Waiting items: opening one only shows it (nothing is pre-selected or changed). The item page shows the Conversation (their messages left, yours right, each with a date) and asks "Action taken?": I followed up (optional "What did you send?"; resets the sent date and the 3-day countdown), They replied (optional "What did they say?", then "Do you want to reply?": Yes → back to To reply with a fresh draft, received today, due this week; No → done), or Resolve. The history is stored per item in `log`.
 
 ## Pages
-`/` home: a sliding To reply | Waiting switch (tabs) over the list, then "+ Add someone" · `/add` full form · `/item/[id]` draft. No separate `/waiting` page. `/demo` (not linked) replaces saved data with sample drafts from `lib/demo.ts` for testing and walkthroughs. Shared header: a "Drafts" link home.
+`/` home: a sliding To reply | Waiting switch (tabs) over the list, then "+ Add someone" · `/add` full form · `/item/[id]` draft. No separate `/waiting` page. `/demo` (not linked) replaces saved data with sample drafts from `lib/demo.ts` for testing and walkthroughs; `/demo/fresh` (not linked) clears everything so Home shows the first visit. Shared header: a "Drafts" link home.
 
 ## Design requirements
 - Forms: one column, a real label on every field, errors next to the field that say what to do next ("Enter who you need to reply to.", not "Invalid input"), and keep what the person typed.

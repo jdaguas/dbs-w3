@@ -28,6 +28,9 @@ export default function DemoPage() {
       </p>
       <div className="flex flex-wrap gap-3">
         <Button onClick={load}>Replace with samples</Button>
+        <ButtonLink href="/demo/fresh" variant="ghost">
+          Start as a new visitor instead
+        </ButtonLink>
         <ButtonLink href="/" variant="ghost">
           Cancel
         </ButtonLink>

@@ -67,6 +67,7 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
   const router = useRouter();
   const [now] = useState(() => new Date());
   const [draft, setDraft] = useState(item.draft);
+  const [message, setMessage] = useState(item.message ?? "");
   const [copy, setCopy] = useState<CopyState>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const overdue = isOverdue(item, now);
@@ -77,6 +78,11 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
     setDraft(value);
     setCopy(null);
     updateItem(item.id, { draft: value });
+  }
+
+  function changeMessage(value: string) {
+    setMessage(value);
+    updateItem(item.id, { message: value.trim() ? value : undefined });
   }
 
   function focusDraft() {
@@ -121,7 +127,8 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
   }
 
   // From "They replied → Yes": the page switches to the reply box with a fresh draft.
-  function startReply() {
+  function startReply(nextMessage: string) {
+    setMessage(nextMessage);
     setDraft("");
     setCopy(null);
     focusDraft();
@@ -162,28 +169,30 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
         )}
       </header>
 
-      {history.length > 1 ? (
+      {history.length > 1 && (
         <section aria-labelledby="conversation-heading" className="flex flex-col gap-3">
           <h2 id="conversation-heading" className="text-sm font-semibold text-ink">
             Conversation
           </h2>
           <Conversation history={history} now={now} />
         </section>
-      ) : (
-        item.message && (
-          <section aria-labelledby="about-heading" className="flex flex-col gap-2">
-            <h2 id="about-heading" className="text-sm font-semibold text-ink">
-              What it&apos;s about
-            </h2>
-            <div
-              tabIndex={0}
-              aria-labelledby="about-heading"
-              className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-field border border-line bg-canvas px-3.5 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
-            >
-              {item.message}
-            </div>
-          </section>
-        )
+      )}
+
+      {(history.length <= 1 || item.status === "needs") && (
+        <TextArea
+          id="message"
+          label="What's it about?"
+          optional
+          hint="A quick note or the whole message. Saves as you type."
+          value={message}
+          onValueChange={changeMessage}
+          error={
+            message.trim().length > TEXT_MAX
+              ? `Paste just the part you're replying to (under ${TEXT_MAX.toLocaleString()} characters).`
+              : undefined
+          }
+          rows={3}
+        />
       )}
 
       {item.status === "needs" && (
@@ -277,7 +286,7 @@ function WaitingActions({
   leaveWith,
 }: {
   item: Item;
-  onReply: () => void;
+  onReply: (message: string) => void;
   leaveWith: (title: string, detail?: string) => void;
 }) {
   const [action, setAction] = useState<Action | "">("");
@@ -309,17 +318,18 @@ function WaitingActions({
     const at = new Date();
     const log = withEntry(item, "theyReplied", note, at);
     if (wantToReply) {
+      const message = note.trim() || item.message;
       updateItem(item.id, {
         status: "needs",
         log,
-        message: note.trim() || item.message,
+        message,
         createdAt: at.toISOString(),
         dueDate: dueDateFor("week", "", at),
         draft: "",
         waitingSince: undefined,
         ...NO_BOOST,
       });
-      onReply();
+      onReply(message ?? "");
     } else {
       updateItem(item.id, { status: "done", log });
       leaveWith(`All set with ${item.who}.`, "Their reply is saved in the conversation.");

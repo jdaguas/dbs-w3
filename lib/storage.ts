@@ -110,6 +110,22 @@ export function replaceItems(items: Item[]) {
   save(items);
 }
 
+/** Forget everything saved on this device, as if Drafts was never opened (used by /demo/fresh). */
+export function resetAll() {
+  let canSave = true;
+  try {
+    [ITEMS_KEY, LAST_VISIT_KEY, SAVED_NOTE_KEY].forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    canSave = false;
+  }
+  // Behave like a real first load: no previous visit now, but this one is recorded for next time.
+  previousVisit = null;
+  writeFlag(LAST_VISIT_KEY, new Date().toISOString());
+  flash = null;
+  cache = { items: [], isNew: true, canSave };
+  emit();
+}
+
 // ---- Small flags (not part of the item list) ----
 
 function readFlag(key: string) {

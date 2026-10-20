@@ -36,6 +36,8 @@ flowchart TD
   Home["Home: Follow up, then To reply | Waiting tabs,<br/>Past due (collapsed), + Add someone (collapsed)"] -- "+ Add someone" --> Check{Valid?}
   Check -- No --> Err["Error next to the field, input kept"] --> Check
   Check -- Yes --> Added["'Added Mom.' First time: 'Saved only in this browser'"] --> Home
+  Header["Header on every page"] -- "+ Add someone" --> AddPage["/add: the full form"] --> Check
+  Header -- "Log out (drafts stay)" --> LoginPage
 
   Home -- open a card --> Item["/item/[id]: What it's about + Your reply<br/>(Edit → Save / Cancel)"]
   Item -- "past due" --> Boost["+4 hours → +8 hours → +1 day<br/>time bar refills"] --> Item
@@ -67,7 +69,7 @@ Item states, every form error, and the wording rules are in [flows.md](flows.md)
 | `/add` | The same add form on its own page |
 | `/item/[id]` | The person, the time bar, What it's about and Your reply (Edit → Save / Cancel), Copy reply, Mark sent, Keep tracking, Boost, and Delete. Waiting items show the conversation and "Action taken?" |
 
-Every page shares a header: the **Drafts** logo (always goes home) and **Log out**.
+Every page shares a header: the **Drafts** logo (always goes home), **+ Add someone** (opens the full form from anywhere, however long the list gets), and **Log out**.
 
 Two routes aren't linked and are only for testing and walkthroughs:
 - `/demo/fresh` clears everything (including the login), so the next visit is a true first visit.

@@ -22,6 +22,8 @@ flowchart TD
   Home["Home: Follow up, then To reply | Waiting tabs,<br/>Past due (collapsed), + Add someone (collapsed)"] -- "+ Add someone" --> Check{Valid?}
   Check -- No --> Err["Error next to the field, input kept"] --> Check
   Check -- Yes --> Added["'Added Mom.' First time: 'Saved only in this browser'"] --> Home
+  Header["Header on every page"] -- "+ Add someone" --> AddPage["/add: the full form"] --> Check
+  Header -- "Log out (drafts stay)" --> LoginPage
 
   Home -- open a card --> Item["/item/[id]: What it's about + Your reply<br/>(Edit → Save / Cancel)"]
   Item -- "past due" --> Boost["+4 hours → +8 hours → +1 day<br/>time bar refills"] --> Item
@@ -82,7 +84,7 @@ Past due isn't a separate saved status. It's a To reply item whose reply-by date
 | `/demo/fresh` | Not linked. Clears everything, including the login, for a true first visit |
 | `/demo` | Not linked. Replaces saved data with sample people in every state |
 
-**Shared header on every page:** the **Drafts** logo, which always goes home, and **Log out** while you're logged in. Logging out clears only the login, so your drafts are still there when you log back in. Both lists live on Home, so there's one place to go back to.
+**Shared header on every page:** the **Drafts** logo, which always goes home. While you're logged in it also shows **+ Add someone**, which opens `/add` so adding is one click away however long the list gets, and **Log out**. Logging out clears only the login, so your drafts are still there when you log back in. Both lists live on Home, so there's one place to go back to.
 
 ## The forms and their errors
 

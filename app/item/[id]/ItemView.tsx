@@ -66,42 +66,33 @@ type CopyState = { ok: boolean; text: string } | null;
 function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
   const router = useRouter();
   const [now] = useState(() => new Date());
-  const [draft, setDraft] = useState(item.draft);
-  const [message, setMessage] = useState(item.message ?? "");
+  const draft = item.draft;
+  // Which text box is open. Both are read-only until Edit, then Save or Cancel.
+  const [editingAbout, setEditingAbout] = useState(false);
+  const [editingDraft, setEditingDraft] = useState(false);
   const [copy, setCopy] = useState<CopyState>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const overdue = isOverdue(item, now);
   const source = sourceLabel(item);
   const history = historyOf(item);
 
-  function changeDraft(value: string) {
-    setDraft(value);
-    setCopy(null);
-    updateItem(item.id, { draft: value });
-  }
-
-  function changeMessage(value: string) {
-    setMessage(value);
-    updateItem(item.id, { message: value.trim() ? value : undefined });
-  }
-
-  function focusDraft() {
-    requestAnimationFrame(() => document.getElementById("draft")?.focus());
+  function editDraft(open: boolean) {
+    setEditingDraft(open);
+    if (open) setCopy(null);
   }
 
   async function copyReply() {
     if (!draft.trim()) {
-      setCopy({ ok: false, text: "Write your reply first, then copy it." });
-      return focusDraft();
+      editDraft(true);
+      return setCopy({ ok: false, text: "Write your reply first, then copy it." });
     }
     try {
       await navigator.clipboard.writeText(draft);
       setCopy({ ok: true, text: `Copied. Paste it into ${source}, then mark it sent.` });
     } catch {
       setCopy({ ok: false, text: "Couldn't copy. Select the text and copy it yourself." });
-      const box = document.getElementById("draft") as HTMLTextAreaElement | null;
-      box?.focus();
-      box?.select();
+      const box = document.getElementById("draft-text");
+      if (box) window.getSelection()?.selectAllChildren(box);
     }
   }
 
@@ -127,17 +118,13 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
   }
 
   // From "They replied → Yes": the page switches to the reply box with a fresh draft.
-  function startReply(nextMessage: string) {
-    setMessage(nextMessage);
-    setDraft("");
-    setCopy(null);
-    focusDraft();
+  function startReply() {
+    editDraft(true);
   }
 
   function reopen() {
-    setDraft("");
     updateItem(item.id, { status: "needs", draft: "", sentAt: undefined, waitingSince: undefined, ...NO_BOOST });
-    focusDraft();
+    editDraft(true);
   }
 
   function deleteItem() {
@@ -179,45 +166,47 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
       )}
 
       {(history.length <= 1 || item.status === "needs") && (
-        <TextArea
+        <EditableText
           id="message"
+          heading="What it's about"
           label="What's it about?"
           optional
-          hint="A quick note or the whole message. Saves as you type."
-          value={message}
-          onValueChange={changeMessage}
-          error={
-            message.trim().length > TEXT_MAX
-              ? `Paste just the part you're replying to (under ${TEXT_MAX.toLocaleString()} characters).`
-              : undefined
-          }
-          rows={3}
+          hint="A quick note or the whole message."
+          value={item.message ?? ""}
+          empty="Nothing added yet."
+          tooLong={`Paste just the part you're replying to (under ${TEXT_MAX.toLocaleString()} characters).`}
+          editing={editingAbout}
+          onEditingChange={setEditingAbout}
+          onSave={(text) => updateItem(item.id, { message: text.trim() || undefined })}
+          rows={4}
         />
       )}
 
       {item.status === "needs" && (
         <section aria-label="Your reply" className="flex flex-col gap-4">
-          <TextArea
+          <EditableText
             id="draft"
+            heading="Your reply"
             label="Your reply"
-            hint="Saves as you type, so you can come back to it."
+            hint="Saved here, so you can come back to it."
             value={draft}
-            onValueChange={changeDraft}
-            error={
-              draft.trim().length > TEXT_MAX
-                ? `Shorten your reply to under ${TEXT_MAX.toLocaleString()} characters.`
-                : undefined
-            }
+            empty="No reply started yet."
+            tooLong={`Shorten your reply to under ${TEXT_MAX.toLocaleString()} characters.`}
+            editing={editingDraft}
+            onEditingChange={editDraft}
+            onSave={(text) => updateItem(item.id, { draft: text })}
             rows={6}
           />
-          <div className="flex flex-col gap-3 sm:flex-row-reverse sm:justify-end">
-            <Button onClick={markSent} full className="sm:w-auto">
-              Mark sent
-            </Button>
-            <Button variant="secondary" onClick={copyReply} full className="sm:w-auto">
-              Copy reply
-            </Button>
-          </div>
+          {!editingDraft && (
+            <div className="flex flex-col gap-3 sm:flex-row-reverse sm:justify-end">
+              <Button onClick={markSent} full className="sm:w-auto">
+                Mark sent
+              </Button>
+              <Button variant="secondary" onClick={copyReply} full className="sm:w-auto">
+                Copy reply
+              </Button>
+            </div>
+          )}
           <p role="status" className={copy?.ok === false ? "text-sm font-medium text-danger" : "text-sm text-ink-soft"}>
             {copy?.text}
           </p>
@@ -271,6 +260,130 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
   );
 }
 
+// A saved block of text that's read-only until Edit, then Save or Cancel (Cancel drops the changes).
+// The page controls `editing` so other actions (Copy with nothing written, They replied) can open it.
+function EditableText({
+  id,
+  heading,
+  label,
+  optional,
+  hint,
+  value,
+  empty,
+  tooLong,
+  editing,
+  onEditingChange,
+  onSave,
+  rows,
+}: {
+  id: string;
+  heading: string;
+  label: string;
+  optional?: boolean;
+  hint: string;
+  value: string;
+  empty: string;
+  tooLong: string;
+  editing: boolean;
+  onEditingChange: (editing: boolean) => void;
+  onSave: (text: string) => void;
+  rows: number;
+}) {
+  const [text, setText] = useState(value);
+  const [error, setError] = useState<string>();
+  const [wasEditing, setWasEditing] = useState(editing);
+  // Each time the box opens, start from what's saved.
+  if (editing !== wasEditing) {
+    setWasEditing(editing);
+    if (editing) {
+      setText(value);
+      setError(undefined);
+    }
+  }
+  const hasText = value.trim() !== "";
+
+  function focusLater(target: string) {
+    requestAnimationFrame(() => document.getElementById(target)?.focus());
+  }
+
+  function open() {
+    onEditingChange(true);
+    focusLater(id);
+  }
+
+  function close() {
+    onEditingChange(false);
+    focusLater(`${id}-edit`);
+  }
+
+  function save() {
+    if (text.trim().length > TEXT_MAX) {
+      setError(tooLong);
+      return document.getElementById(id)?.focus();
+    }
+    onSave(text);
+    close();
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-3">
+        <TextArea
+          id={id}
+          label={label}
+          optional={optional}
+          hint={hint}
+          value={text}
+          onValueChange={(v) => {
+            setText(v);
+            if (error && v.trim().length <= TEXT_MAX) setError(undefined);
+          }}
+          error={error}
+          rows={rows}
+          autoFocus
+        />
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={save}>Save</Button>
+          <Button variant="ghost" onClick={close}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <section aria-labelledby={`${id}-heading`} className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <h2 id={`${id}-heading`} className="text-sm font-semibold text-ink">
+          {heading}
+        </h2>
+        <Button
+          id={`${id}-edit`}
+          variant="ghost"
+          className="min-h-10 px-4"
+          onClick={open}
+          aria-label={`${hasText ? "Edit" : "Add"} ${heading.toLowerCase()}`}
+        >
+          {hasText ? "Edit" : "Add"}
+        </Button>
+      </div>
+      {hasText ? (
+        <div
+          id={`${id}-text`}
+          tabIndex={0}
+          aria-labelledby={`${id}-heading`}
+          className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-field border border-line bg-canvas px-3.5 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+        >
+          {value}
+        </div>
+      ) : (
+        <p className="text-sm text-ink-muted">{empty}</p>
+      )}
+    </section>
+  );
+}
+
 type Action = "followUp" | "replied" | "resolve";
 
 const ACTIONS: { value: Action; label: string }[] = [
@@ -286,7 +399,7 @@ function WaitingActions({
   leaveWith,
 }: {
   item: Item;
-  onReply: (message: string) => void;
+  onReply: () => void;
   leaveWith: (title: string, detail?: string) => void;
 }) {
   const [action, setAction] = useState<Action | "">("");
@@ -318,18 +431,17 @@ function WaitingActions({
     const at = new Date();
     const log = withEntry(item, "theyReplied", note, at);
     if (wantToReply) {
-      const message = note.trim() || item.message;
       updateItem(item.id, {
         status: "needs",
         log,
-        message,
+        message: note.trim() || item.message,
         createdAt: at.toISOString(),
         dueDate: dueDateFor("week", "", at),
         draft: "",
         waitingSince: undefined,
         ...NO_BOOST,
       });
-      onReply(message ?? "");
+      onReply();
     } else {
       updateItem(item.id, { status: "done", log });
       leaveWith(`All set with ${item.who}.`, "Their reply is saved in the conversation.");

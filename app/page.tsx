@@ -7,7 +7,7 @@ import { Button } from "@/components/Button";
 import { ItemCard } from "@/components/ItemCard";
 import { TabPanel, Tabs } from "@/components/Tabs";
 import { AddForm } from "./add/AddForm";
-import { createItem, daysSince, dueDateFor, followUpsDue, sentThisWeek, sortNeedsReply, waitingOn, type Channel, type Item } from "@/lib/items";
+import { createItem, daysSince, dueDateFor, followUpsDue, isOverdue, sentThisWeek, sortNeedsReply, waitingOn, type Channel, type Item } from "@/lib/items";
 import { addItem, addedFlash, clearFlash, getPreviousVisit, peekFlash, useStore, type Store } from "@/lib/storage";
 
 // Home: the first visit (nothing saved), coming back (welcome + who's waiting),
@@ -95,6 +95,37 @@ function CardList({ items, now }: { items: Item[]; now: Date }) {
   );
 }
 
+// Past their reply-by date, tucked into a closed panel under the list so they don't crowd out what's
+// still coming up. Stays open or closed while you visit items and come back (not saved).
+let pastDueOpen = false;
+
+function PastDuePanel({ items, now }: { items: Item[]; now: Date }) {
+  const [open, setOpen] = useState(pastDueOpen);
+  return (
+    <details
+      open={open}
+      onToggle={(e) => {
+        pastDueOpen = e.currentTarget.open;
+        setOpen(e.currentTarget.open);
+      }}
+      className="group rounded-card border border-line bg-surface shadow-card"
+    >
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 font-semibold text-ink hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center gap-2.5">
+          Past due <Count n={items.length} />
+        </span>
+        <span aria-hidden="true" className="text-ink-muted transition-transform group-open:rotate-180">
+          ▾
+        </span>
+      </summary>
+      <div className="flex flex-col gap-3 border-t border-line p-4">
+        <p className="text-sm text-ink-muted">Past their reply-by date. Boost one to give yourself more time.</p>
+        <CardList items={items} now={now} />
+      </div>
+    </details>
+  );
+}
+
 // The full add form in a "+ Add someone" panel. On return visits it sits below the list so the list
 // comes first; it starts open on the first visit and whenever there's nothing to reply to.
 function AddPanel({
@@ -141,10 +172,15 @@ function HomeContent({ store }: { store: Store }) {
   // Most urgent first. Boosting doesn't reshuffle the list while you're looking at it (so you can
   // tap again in place); the order refreshes when items are added or removed, or on the next visit.
   const sorted = sortNeedsReply(store.items, now);
-  const [order, setOrder] = useState(() => sorted.map((i) => i.id));
+  // Which ones sit under Past due is fixed at the same time, so a boosted card stays put until then too.
+  const snapshot = () => ({ order: sorted.map((i) => i.id), pastDue: sorted.filter((i) => isOverdue(i, now)).map((i) => i.id) });
+  const [{ order, pastDue: pastDueIds }, setSnapshot] = useState(snapshot);
   const sameItems = sorted.length === order.length && sorted.every((i) => order.includes(i.id));
-  if (!sameItems) setOrder(sorted.map((i) => i.id));
+  if (!sameItems) setSnapshot(snapshot());
   const needs = sameItems ? order.map((id) => sorted.find((i) => i.id === id)!) : sorted;
+  const pastDueSet = new Set(sameItems ? pastDueIds : sorted.filter((i) => isOverdue(i, now)).map((i) => i.id));
+  const upcoming = needs.filter((i) => !pastDueSet.has(i.id));
+  const pastDue = needs.filter((i) => pastDueSet.has(i.id));
   const followUps = followUpsDue(store.items, now);
   // Includes the quiet ones also shown under Follow up, so the count matches the list.
   const waiting = waitingOn(store.items);
@@ -271,7 +307,14 @@ function HomeContent({ store }: { store: Store }) {
             needs.length === 0 ? (
               <EmptyList>You&apos;re all caught up. Add someone below when a message comes in.</EmptyList>
             ) : (
-              <CardList items={needs} now={now} />
+              <div className="flex flex-col gap-3">
+                {upcoming.length > 0 ? (
+                  <CardList items={upcoming} now={now} />
+                ) : (
+                  <EmptyList>Nothing coming up. The ones past their date are below.</EmptyList>
+                )}
+                {pastDue.length > 0 && <PastDuePanel items={pastDue} now={now} />}
+              </div>
             )
           ) : waiting.length === 0 ? (
             <EmptyList>

@@ -8,6 +8,10 @@ import { signIn } from "@/lib/storage";
 
 type Errors = { email?: string; password?: string };
 
+// The one demo account everyone shares (shown as hints under the fields).
+const DEMO_EMAIL = "mpcs@gmail.com";
+const DEMO_PASSWORD = "P@s#word";
+
 function check(email: string, password: string): Errors {
   const errors: Errors = {};
   if (!email.trim()) errors.email = "Enter your email.";
@@ -16,8 +20,8 @@ function check(email: string, password: string): Errors {
   return errors;
 }
 
-// Mock login for the walkthrough: any email and password work. Nothing is checked,
-// saved, or sent anywhere; it only remembers that this screen was passed.
+// Mock login for the walkthrough: only the demo account gets in. Nothing is saved or
+// sent anywhere; it only remembers that this screen was passed.
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -42,6 +46,12 @@ export default function LoginPage() {
       document.getElementById(target)?.focus();
       return;
     }
+    // Wrong account: keep what they typed and say what to do next, under the password.
+    if (email.trim().toLowerCase() !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
+      setErrors({ password: "Incorrect email or password. Use the demo login shown under each field." });
+      document.getElementById("password")?.focus();
+      return;
+    }
     signIn();
     router.replace("/");
   }
@@ -58,6 +68,8 @@ export default function LoginPage() {
           label="Email"
           type="email"
           autoComplete="email"
+          hint={`Demo email: ${DEMO_EMAIL}`}
+          hintBelow
           value={email}
           onValueChange={(v) => update(v, password)}
           error={errors.email}
@@ -67,6 +79,8 @@ export default function LoginPage() {
           label="Password"
           type="password"
           autoComplete="current-password"
+          hint={`Demo password: ${DEMO_PASSWORD}`}
+          hintBelow
           value={password}
           onValueChange={(v) => update(email, v)}
           error={errors.password}
@@ -75,7 +89,7 @@ export default function LoginPage() {
           Log in
         </Button>
       </form>
-      <p className="text-sm text-ink-muted">Demo only: any email and password work, and nothing leaves this browser.</p>
+      <p className="text-sm text-ink-muted">Demo only: there are no real accounts, and nothing leaves this browser.</p>
     </div>
   );
 }

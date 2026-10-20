@@ -12,6 +12,7 @@ type Shared = {
   onValueChange: (value: string) => void;
   optional?: boolean;
   hint?: string;
+  hintBelow?: boolean;
   error?: string;
 };
 
@@ -22,12 +23,13 @@ export function TextField({
   onValueChange,
   optional,
   hint,
+  hintBelow,
   error,
   inputRef,
   ...props
 }: Shared & { inputRef?: Ref<HTMLInputElement> } & Omit<ComponentProps<"input">, "id" | "value" | "onChange">) {
   return (
-    <Field id={id} label={label} optional={optional} hint={hint} error={error}>
+    <Field id={id} label={label} optional={optional} hint={hint} hintBelow={hintBelow} error={error}>
       <input
         id={id}
         ref={inputRef}
@@ -49,11 +51,12 @@ export function TextArea({
   onValueChange,
   optional,
   hint,
+  hintBelow,
   error,
   ...props
 }: Shared & Omit<ComponentProps<"textarea">, "id" | "value" | "onChange">) {
   return (
-    <Field id={id} label={label} optional={optional} hint={hint} error={error}>
+    <Field id={id} label={label} optional={optional} hint={hint} hintBelow={hintBelow} error={error}>
       <textarea
         id={id}
         value={value}

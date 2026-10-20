@@ -52,6 +52,7 @@ export function Field({
   label,
   optional,
   hint,
+  hintBelow = false,
   error,
   children,
 }: {
@@ -59,6 +60,8 @@ export function Field({
   label: string;
   optional?: boolean;
   hint?: string;
+  /** Put the hint under the control instead of under the label (e.g. "Demo email: …"). */
+  hintBelow?: boolean;
   error?: string;
   children: ReactNode;
 }) {
@@ -67,8 +70,9 @@ export function Field({
       <label htmlFor={id} className="text-sm font-semibold text-ink">
         <LabelText label={label} optional={optional} />
       </label>
-      {hint && <Hint id={id}>{hint}</Hint>}
+      {hint && !hintBelow && <Hint id={id}>{hint}</Hint>}
       {children}
+      {hint && hintBelow && <Hint id={id}>{hint}</Hint>}
       {error && <ErrorText id={id}>{error}</ErrorText>}
     </div>
   );

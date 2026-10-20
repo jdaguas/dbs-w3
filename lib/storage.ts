@@ -10,6 +10,7 @@ import type { Item } from "./items";
 const ITEMS_KEY = "drafts:v1";
 const LAST_VISIT_KEY = "drafts:lastVisit";
 const SAVED_NOTE_KEY = "drafts:savedNoteShown";
+const SIGNED_IN_KEY = "drafts:signedIn";
 
 export type Store = {
   items: Item[];
@@ -17,6 +18,8 @@ export type Store = {
   isNew: boolean;
   /** False when the browser blocks localStorage (e.g. some private modes). */
   canSave: boolean;
+  /** Passed the mock login screen on this device (no real account). */
+  signedIn: boolean;
 };
 
 let cache: Store | null = null;
@@ -36,15 +39,17 @@ function isItem(value: unknown): value is Item {
 
 function load(): Store {
   try {
+    const signedIn = window.localStorage.getItem(SIGNED_IN_KEY) === "1";
     const raw = window.localStorage.getItem(ITEMS_KEY);
-    if (raw === null) return { items: [], isNew: true, canSave: true };
+    if (raw === null) return { items: [], isNew: true, canSave: true, signedIn };
     const parsed: unknown = JSON.parse(raw);
     // Corrupt or unexpected data → start fresh rather than crash.
-    if (!Array.isArray(parsed)) return { items: [], isNew: true, canSave: true };
+    if (!Array.isArray(parsed)) return { items: [], isNew: true, canSave: true, signedIn };
     const items = parsed.filter(isItem).map((i) => ({ ...i, draft: i.draft ?? "", ongoing: !!i.ongoing }));
-    return { items, isNew: false, canSave: true };
+    return { items, isNew: false, canSave: true, signedIn };
   } catch {
-    return { items: [], isNew: true, canSave: false };
+    // Storage blocked: the login still works for this tab, it just isn't remembered.
+    return { items: [], isNew: true, canSave: false, signedIn: cache?.signedIn ?? false };
   }
 }
 
@@ -56,7 +61,7 @@ function subscribe(listener: () => void) {
   listeners.add(listener);
   // Keep other open tabs in sync.
   const onStorage = (e: StorageEvent) => {
-    if (e.key === ITEMS_KEY || e.key === null) {
+    if (e.key === ITEMS_KEY || e.key === SIGNED_IN_KEY || e.key === null) {
       cache = load();
       emit();
     }
@@ -89,7 +94,7 @@ function save(items: Item[]) {
   } catch {
     canSave = false;
   }
-  cache = { items, isNew: false, canSave };
+  cache = { items, isNew: false, canSave, signedIn: getSnapshot().signedIn };
   emit();
 }
 
@@ -114,7 +119,7 @@ export function replaceItems(items: Item[]) {
 export function resetAll() {
   let canSave = true;
   try {
-    [ITEMS_KEY, LAST_VISIT_KEY, SAVED_NOTE_KEY].forEach((key) => window.localStorage.removeItem(key));
+    [ITEMS_KEY, LAST_VISIT_KEY, SAVED_NOTE_KEY, SIGNED_IN_KEY].forEach((key) => window.localStorage.removeItem(key));
   } catch {
     canSave = false;
   }
@@ -122,7 +127,14 @@ export function resetAll() {
   previousVisit = null;
   writeFlag(LAST_VISIT_KEY, new Date().toISOString());
   flash = null;
-  cache = { items: [], isNew: true, canSave };
+  cache = { items: [], isNew: true, canSave, signedIn: false };
+  emit();
+}
+
+/** Mock login: nothing is checked or sent anywhere, it just remembers that the screen was passed. */
+export function signIn() {
+  writeFlag(SIGNED_IN_KEY, "1");
+  cache = { ...getSnapshot(), signedIn: true };
   emit();
 }
 

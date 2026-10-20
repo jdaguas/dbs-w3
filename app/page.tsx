@@ -1,10 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { Banner } from "@/components/Banner";
 import { Button } from "@/components/Button";
 import { ItemCard } from "@/components/ItemCard";
-import { QuickAdd } from "@/components/QuickAdd";
 import { TabPanel, Tabs } from "@/components/Tabs";
 import { AddForm } from "./add/AddForm";
 import { createItem, daysSince, dueDateFor, followUpsDue, sentThisWeek, sortNeedsReply, waitingOn, type Channel, type Item } from "@/lib/items";
@@ -16,7 +16,13 @@ import { addItem, addedFlash, clearFlash, getPreviousVisit, peekFlash, useStore,
 
 export default function Home() {
   const store = useStore();
-  if (!store) return <p className="text-ink-muted">Loading your drafts…</p>;
+  const router = useRouter();
+  // Mock login: someone who hasn't passed the login screen on this device goes there first.
+  const needsLogin = store !== null && !store.signedIn;
+  useEffect(() => {
+    if (needsLogin) router.replace("/login");
+  }, [needsLogin, router]);
+  if (!store || needsLogin) return <p className="text-ink-muted">Loading your drafts…</p>;
   return <HomeContent store={store} />;
 }
 
@@ -86,6 +92,42 @@ function CardList({ items, now }: { items: Item[]; now: Date }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+// The full add form in a "+ Add someone" panel. On return visits it sits below the list so the list
+// comes first; it starts open on the first visit and whenever there's nothing to reply to.
+function AddPanel({
+  open,
+  onToggle,
+  onDone,
+}: {
+  open: boolean;
+  onToggle: (open: boolean) => void;
+  onDone: (item?: Item) => void;
+}) {
+  return (
+    <details
+      open={open}
+      onToggle={(e) => e.currentTarget.open !== open && onToggle(e.currentTarget.open)}
+      className="group rounded-card border border-line bg-surface shadow-card"
+    >
+      <summary id="add-summary" className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 font-semibold text-ink hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center gap-2.5">
+          <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-accent text-base leading-none text-white">
+            +
+          </span>
+          Add someone
+        </span>
+        <span aria-hidden="true" className="text-ink-muted transition-transform group-open:rotate-180">
+          ▾
+        </span>
+      </summary>
+      <div className="flex flex-col gap-4 border-t border-line px-4 pb-4 pt-4">
+        {/* Mounted only while open, so it starts empty each time. */}
+        {open && <AddForm onAdded={onDone} onCancel={() => onDone()} />}
+      </div>
+    </details>
   );
 }
 
@@ -165,7 +207,7 @@ function HomeContent({ store }: { store: Store }) {
               Log messages you can&apos;t answer yet. Write back when you have a minute.
             </p>
           </div>
-          <QuickAdd onAdded={confirm} />
+          <AddPanel open={addOpen} onToggle={toggleAdd} onDone={closeAdd} />
           {flashBanner}
           <div className="flex flex-col gap-2">
             <p className="text-sm font-semibold text-ink">Or start with:</p>
@@ -247,28 +289,7 @@ function HomeContent({ store }: { store: Store }) {
         </TabPanel>
       </section>
 
-      {/* The full form, tucked away so the list comes first; opens on its own when there's nothing to reply to. */}
-      <details
-        open={addOpen}
-        onToggle={(e) => e.currentTarget.open !== addOpen && toggleAdd(e.currentTarget.open)}
-        className="group rounded-card border border-line bg-surface shadow-card"
-      >
-        <summary id="add-summary" className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 font-semibold text-ink hover:bg-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
-          <span className="flex items-center gap-2.5">
-            <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-accent text-base leading-none text-white">
-              +
-            </span>
-            Add someone
-          </span>
-          <span aria-hidden="true" className="text-ink-muted transition-transform group-open:rotate-180">
-            ▾
-          </span>
-        </summary>
-        <div className="flex flex-col gap-4 border-t border-line px-4 pb-4 pt-4">
-          {/* Mounted only while open, so it starts empty each time. */}
-          {addOpen && <AddForm onAdded={closeAdd} onCancel={() => closeAdd()} />}
-        </div>
-      </details>
+      <AddPanel open={addOpen} onToggle={toggleAdd} onDone={closeAdd} />
     </div>
   );
 }

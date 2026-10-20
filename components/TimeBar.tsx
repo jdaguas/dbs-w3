@@ -1,27 +1,41 @@
-import { followUpFraction, timeLeftFraction, type Item } from "@/lib/items";
+import { dueEnd, followUpFraction, timeLeftFraction, type Item } from "@/lib/items";
 
 // A "health bar" with an arrow riding its edge. Decorative: the status line says the same in words.
 // - To reply: the window from received to the reply-by date. The fill drains from the left, so the
-//   arrow travels left → right toward the date. Amber at ≤ 25% left; past the date the bar is empty
-//   and the arrow rests, greyed, at the end. No rush: solid, no arrow.
+//   arrow travels left → right toward the date. Green while more than 60% is left, brown down to 25%,
+//   red for the last stretch or the final 12 hours (so "8 hours left" is never green); past the date the bar is empty and the arrow rests, greyed, at the end.
+//   No rush: solid, no arrow.
 // - Waiting: the days until a follow-up is due. The fill drains from the right, so the arrow travels
 //   right → left, back toward you.
 
-type Tone = "accent" | "warn" | "waiting" | "spent";
+type Tone = "full" | "mid" | "low" | "waiting" | "spent";
 
 const fills: Record<Tone, string> = {
-  accent: "bg-accent",
-  warn: "bg-warn",
+  full: "bg-bar-full",
+  mid: "bg-bar-mid",
+  low: "bg-bar-low",
   waiting: "bg-ink-muted",
   spent: "",
 };
 
 const markers: Record<Tone, string> = {
-  accent: "border-accent text-accent",
-  warn: "border-warn text-warn",
+  full: "border-bar-full text-bar-full",
+  mid: "border-bar-mid text-bar-mid",
+  low: "border-bar-low text-bar-low",
   waiting: "border-ink-muted text-ink-muted",
   spent: "border-line-hover text-ink-muted",
 };
+
+const FINAL_HOURS = 12 * 60 * 60 * 1000;
+
+/** How much of the reply window is left → bar color. The final hours are always red. */
+function toneFor(left: number, msLeft: number): Tone {
+  if (left === 0) return "spent";
+  if (msLeft < FINAL_HOURS) return "low";
+  if (left > 0.6) return "full";
+  if (left > 0.25) return "mid";
+  return "low";
+}
 
 export function TimeBar({ item, now }: { item: Item; now: Date }) {
   if (item.status === "done") return null;
@@ -39,7 +53,7 @@ export function TimeBar({ item, now }: { item: Item; now: Date }) {
       </div>
     );
   }
-  return <Bar left={left} tone={left === 0 ? "spent" : left <= 0.25 ? "warn" : "accent"} direction="right" />;
+  return <Bar left={left} tone={toneFor(left, (dueEnd(item) ?? Infinity) - now.getTime())} direction="right" />;
 }
 
 /** `direction` is where the arrow is heading as time passes. */

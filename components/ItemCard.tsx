@@ -82,7 +82,7 @@ export function ItemCard({ item, now = new Date(), example = false }: { item: It
 
         {(drafting || example || boostable) && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {drafting && <Tag tone="accent">Draft started</Tag>}
+            {drafting && <Tag tone="info">Draft started</Tag>}
             {example && <Tag>Example</Tag>}
             {boostable && <BoostButton item={item} className="relative z-[2] ml-auto" />}
           </div>

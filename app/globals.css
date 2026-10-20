@@ -1,59 +1,70 @@
 @import "tailwindcss";
 
 /*
- * Drafts design system: "calm modern".
- * Use these semantic names (bg-surface, text-ink-muted, bg-accent…) instead of raw
- * palette colors, so the look can change in one place. Text pairs meet WCAG AA:
- *   ink / ink-soft / ink-muted on canvas, surface, and subtle (≥ 4.5:1)
- *   white on accent (5.5:1) · accent-ink on accent-soft · warn-ink on warn-soft · danger on surface
- * Graphics (time bar fills, icons) are ≥ 3:1 against surface.
+ * Drafts design system: "retro".
+ * Warm cream paper with three inks: rust (actions), navy blue (headings, focus), and moss (details).
+ * Text color steps down the hierarchy: navy headings → espresso body → moss hints and metadata.
+ * Use these semantic names (bg-surface, text-ink-muted, bg-accent…) instead of raw palette
+ * colors, so the look can change in one place. Text pairs meet WCAG AA:
+ *   ink (12:1) / ink-soft (11:1) / ink-muted (7:1) on surface; all ≥ 5.7:1 on canvas and subtle
+ *   white on accent (5.7:1) · accent-ink on accent-soft (7.8:1) · warn-ink on warn-soft (7.3:1)
+ *   danger on surface (7.3:1) · success-ink on success-soft (8.1:1)
+ * Graphics (time bar fills, focus ring) are ≥ 3:1 against surface.
  */
 @theme {
-  /* Surfaces */
-  --color-canvas: #eef2f5; /* page background: a step darker than cards so they stand out */
-  --color-surface: #ffffff; /* cards, inputs, header */
-  --color-subtle: #e4e9ee; /* tags, tab track, quiet fills */
+  /* Surfaces: cream paper */
+  --color-canvas: #f5eddf; /* page background: a step darker than cards so they stand out */
+  --color-surface: #fffbf4; /* cards, inputs, header */
+  --color-subtle: #ebe0cc; /* tags, tab track, quiet fills */
 
-  /* Text */
-  --color-ink: #0f172a; /* headings, primary text */
-  --color-ink-soft: #334155; /* body text */
-  --color-ink-muted: #526070; /* hints, metadata */
+  /* Text: a different ink for each level */
+  --color-ink: #1c3557; /* headings, names, primary text: navy */
+  --color-ink-soft: #4a3426; /* body text: espresso */
+  --color-ink-muted: #4d5a2a; /* hints, dates, metadata: moss */
 
   /* Lines */
-  --color-line: #e2e8f0;
-  --color-line-strong: #cbd5e1;
-  --color-line-hover: #94a3b8;
+  --color-line: #e6dac5;
+  --color-line-strong: #cfbf9f;
+  --color-line-hover: #a8946d;
 
-  /* Accent: deep teal, for primary actions, selection, and focus */
-  --color-accent: #0f766e;
-  --color-accent-hover: #115e59;
-  --color-accent-soft: #e6f4f2;
-  --color-accent-ink: #0b4f4a;
-  --color-focus: #0f766e;
+  /* Accent: rust, for primary actions and selection */
+  --color-accent: #b0431f;
+  --color-accent-hover: #8f3415;
+  --color-accent-soft: #f8e4d8;
+  --color-accent-ink: #7a2c10;
+  --color-focus: #2b5c8a; /* focus ring: blue, so it stands out next to rust buttons */
 
-  /* Time bar: every fill is ≥ 3:1 against white cards (WCAG non-text contrast) */
-  --color-track: #d5dde5; /* empty part of the bar */
-  --color-open: #4f8f89; /* No rush: a solid, calmer teal (3.7:1) */
+  /* Time bar: every fill is ≥ 3:1 against cards (WCAG non-text contrast) */
+  --color-track: #e0d4bd; /* empty part of the bar */
+  --color-open: #6b7f3a; /* No rush: solid moss (4.3:1) */
+  --color-bar-full: #5f7a2e; /* To reply, more than 60% of the window left: moss green (4.7:1) */
+  --color-bar-mid: #8a5a2b; /* 25–60% left: brown (5.7:1) */
+  --color-bar-low: #b3261e; /* last 25%, the final hours: red (6.3:1) */
 
-  /* Status: overdue / no reply (one calm accent, always with a text label) */
-  --color-warn-soft: #fdf3dc;
-  --color-warn-line: #f0c76e;
-  --color-warn-ink: #7a3e09;
-  --color-warn: #b45309; /* time bar when little time is left */
+  /* Status: low time / no reply (mustard, always with a text label) */
+  --color-warn-soft: #f9ecc8;
+  --color-warn-line: #e2bf6a;
+  --color-warn-ink: #6e4206;
+  --color-warn: #b0700a; /* time bar when little time is left (3.9:1) */
 
-  --color-danger: #b42318;
-  --color-danger-soft: #fef1f0;
-  --color-danger-line: #f5c2bd;
+  /* Info: soft blue, for the welcome-back greeting and other neutral notes */
+  --color-info-soft: #e4ecf5;
+  --color-info-line: #a9c0dc;
+  --color-info-ink: #1c3557; /* 10:1 on info-soft */
 
-  --color-success-soft: #e8f6ee;
-  --color-success-line: #b5e0c6;
-  --color-success-ink: #14532d;
+  --color-danger: #9e2a1c; /* deeper brick than the rust accent, so delete reads differently */
+  --color-danger-soft: #fbebe6;
+  --color-danger-line: #efc2b6;
 
-  /* Shape and depth */
+  --color-success-soft: #e9efd9;
+  --color-success-line: #c3d29b;
+  --color-success-ink: #3d4a1c;
+
+  /* Shape and depth (warm brown shadows) */
   --radius-card: 1rem;
   --radius-field: 0.75rem;
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
-  --shadow-raised: 0 2px 4px rgb(15 23 42 / 0.05), 0 8px 20px -6px rgb(15 23 42 / 0.12);
+  --shadow-card: 0 1px 2px rgb(74 52 38 / 0.06), 0 1px 3px rgb(74 52 38 / 0.08);
+  --shadow-raised: 0 2px 4px rgb(74 52 38 / 0.06), 0 8px 20px -6px rgb(74 52 38 / 0.16);
 }
 
 @theme inline {

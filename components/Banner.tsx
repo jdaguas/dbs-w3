@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 type Tone = "info" | "success" | "warning";
 
 const tones: Record<Tone, string> = {
-  info: "border-accent/25 bg-accent-soft text-accent-ink",
+  info: "border-info-line bg-info-soft text-info-ink",
   success: "border-success-line bg-success-soft text-success-ink",
   warning: "border-warn-line bg-warn-soft text-warn-ink",
 };

@@ -102,7 +102,7 @@ Corrupt or missing data starts fresh instead of crashing. If the browser blocks 
 ### Why you'd come back
 
 - **A reply you started.** The point of Drafts is to start the reply when you have a minute and finish it later, so a half-written draft is waiting for you.
-- **Deadlines that move.** Each card shows "Reply by 10/20 · 2 days left" over a time bar that drains toward the date and turns amber when time is short. To reply is sorted most urgent first.
+- **Deadlines that move.** Each card shows "Reply by 10/20 · 2 days left" over a time bar that drains toward the date and goes from green to brown to red as the date gets close (always red in the last 12 hours). To reply is sorted most urgent first.
 - **A greeting that tells you what changed:** "Welcome back. You owe 3 replies. Mom has been waiting 4 days." It only appears after an hour or more away, so it means something.
 - **Follow-up nudges.** Turn on "Keep tracking after I reply" and the conversation moves to Waiting. If they go quiet for 3 days, it comes back to the top of Home: "No reply yet. Follow up?"
 - **A way back from missing a date.** A past-due card greys out (calm, not alarming) and offers **+4 hours**. Each tap gives more time (4 hours → 8 hours → 1 day), so you can still recover an overdue item.
@@ -116,7 +116,7 @@ Corrupt or missing data starts fresh instead of crashing. If the browser blocks 
 
 ## Shared components
 
-Everything is built from one set of components in [components/](components/): `Button`, `TextField` / `TextArea`, `Field`, `ChipGroup`, `Checkbox`, `Banner`, `Nav`, `ItemCard`, `Tabs`, `TimeBar`, `ChannelIcon`, `Tag`, and `BoostButton`. Colors, radii, and shadows come from tokens in [app/globals.css](app/globals.css) (a "calm modern" deep-teal theme), and pages use semantic classes like `text-ink-soft` and `bg-accent`, never raw palette colors.
+Everything is built from one set of components in [components/](components/): `Button`, `TextField` / `TextArea`, `Field`, `ChipGroup`, `Checkbox`, `Banner`, `Nav`, `ItemCard`, `Tabs`, `TimeBar`, `ChannelIcon`, `Tag`, and `BoostButton`. Colors, radii, and shadows come from tokens in [app/globals.css](app/globals.css) (a "retro" theme: cream paper, rust for actions, navy headings, espresso body text, and moss for hints and dates, so each text level has its own color), and pages use semantic classes like `text-ink-soft` and `bg-accent`, never raw palette colors.
 
 ## Accessibility
 

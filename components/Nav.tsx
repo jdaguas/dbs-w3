@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { LogoutButton } from "./LogoutButton";
 
 // Shared header. Both lists (To reply, Waiting) live on Home, so there's one place to go back to.
 export function Nav() {
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-surface/85 backdrop-blur">
-      <nav aria-label="Main" className="mx-auto flex max-w-xl items-center px-4 py-2.5">
+      <nav aria-label="Main" className="mx-auto flex max-w-xl items-center justify-between gap-3 px-4 py-2.5">
         <Link
           href="/"
           className="flex items-center gap-2.5 rounded-full py-1.5 pr-2 text-base font-semibold tracking-tight text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
@@ -23,6 +24,7 @@ export function Nav() {
           </span>
           Drafts
         </Link>
+        <LogoutButton />
       </nav>
     </header>
   );

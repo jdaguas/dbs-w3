@@ -138,6 +138,17 @@ export function signIn() {
   emit();
 }
 
+/** Back to the login screen. Saved drafts stay, so logging in again picks up where you left off. */
+export function signOut() {
+  try {
+    window.localStorage.removeItem(SIGNED_IN_KEY);
+  } catch {
+    // Storage blocked: forgetting it for this tab is enough.
+  }
+  cache = { ...getSnapshot(), signedIn: false };
+  emit();
+}
+
 // ---- Small flags (not part of the item list) ----
 
 function readFlag(key: string) {

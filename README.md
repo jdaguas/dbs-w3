@@ -33,7 +33,7 @@ flowchart TD
   First -- "fill the form or tap a chip" --> Check
   Back --> Home
 
-  Home["Home: Follow up, then To reply | Waiting tabs,<br/>+ Add someone (collapsed)"] -- "+ Add someone" --> Check{Valid?}
+  Home["Home: Follow up, then To reply | Waiting tabs,<br/>Past due (collapsed), + Add someone (collapsed)"] -- "+ Add someone" --> Check{Valid?}
   Check -- No --> Err["Error next to the field, input kept"] --> Check
   Check -- Yes --> Added["'Added Mom.' First time: 'Saved only in this browser'"] --> Home
 
@@ -63,7 +63,7 @@ Item states, every form error, and the wording rules are in [flows.md](flows.md)
 | Route | What's on it |
 |---|---|
 | `/login` | Mock login. Only the demo account gets in; anything else shows "Incorrect email or password." |
-| `/` | First visit: prompt, the full add form, starter chips, an example item. Coming back: welcome greeting, follow-ups due, a sliding **To reply \| Waiting** switch, and "+ Add someone" below the list |
+| `/` | First visit: prompt, the full add form, starter chips, an example item. Coming back: welcome greeting, follow-ups due, a sliding **To reply \| Waiting** switch, a closed **Past due** panel for replies past their date, and "+ Add someone" below the list |
 | `/add` | The same add form on its own page |
 | `/item/[id]` | The person, the time bar, What it's about and Your reply (Edit → Save / Cancel), Copy reply, Mark sent, Keep tracking, Boost, and Delete. Waiting items show the conversation and "Action taken?" |
 

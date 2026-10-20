@@ -386,7 +386,7 @@ function EditableText({
           id={`${id}-text`}
           tabIndex={0}
           aria-labelledby={`${id}-heading`}
-          className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-field border border-line bg-canvas px-3.5 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
+          className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-field border border-line-strong bg-surface px-3.5 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-focus"
         >
           {value}
         </div>

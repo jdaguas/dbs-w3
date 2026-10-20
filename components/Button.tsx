@@ -3,9 +3,10 @@ import type { ComponentProps, ReactNode } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
+// The focus color is set all the time (the ring only shows on focus), so transition-colors can't fade it in from white.
 const base =
   "inline-flex items-center justify-center gap-2 rounded-full px-5 min-h-11 text-sm font-semibold transition-colors " +
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50 disabled:cursor-not-allowed";
+  "outline-focus focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
 const variants: Record<Variant, string> = {
   primary: "bg-accent text-white shadow-card hover:bg-accent-hover",

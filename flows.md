@@ -15,7 +15,7 @@ flowchart TD
   Login -- Yes --> Saved{Anything saved?}
 
   Saved -- No --> First["First visit: 'Who do you owe a reply?'<br/>+ Add someone form (open), starter chips,<br/>1 example item with a draft"]
-  Saved -- Yes --> Back["Welcome back: '3 people are waiting on a reply, Mom for 4 days.'<br/>follow-ups due on top, drafts restored"]
+  Saved -- Yes --> Back["Welcome back (after an hour or more away):<br/>'You owe 3 replies. Mom has been waiting 4 days.'<br/>follow-ups due on top, drafts restored"]
   First -- "fill the form or tap a chip" --> Check
   Back --> Home
 
@@ -54,7 +54,7 @@ stateDiagram-v2
   Drafting --> NeedsReply: Save an empty reply
   NeedsReply --> PastDue: Reply-by date passes
   Drafting --> PastDue: Reply-by date passes
-  PastDue --> NeedsReply: Boost (+4h, +8h, +1 day)
+  PastDue --> NeedsReply: Boost (+4h, +8h, +1 day), back in the active list
   NeedsReply --> Done: Mark sent (one-time)
   Drafting --> Done: Mark sent (one-time)
   PastDue --> Done: Mark sent (one-time)
@@ -77,7 +77,7 @@ Past due isn't a separate saved status. It's a To reply item whose reply-by date
 
 | Route | What's on it |
 |---|---|
-| `/login` | Mock login: Email and Password, with the demo account (`mpcs@gmail.com` / `P@s#word`) shown under each field. Home sends you here until you've logged in once on this device |
+| `/login` | Mock login: Email and Password, with the demo account (`mpcs@gmail.com` / `P@s#word`) shown under each field. Every other page (except `/demo` tools) sends you here until you've logged in once on this device |
 | `/` | **First visit:** "Who do you owe a reply?", the + Add someone form already open, starter chips (+ Mom, + Group chat, + Recruiter, + Landlord), and an example card with a draft. **Coming back:** "Welcome back" greeting, Follow up (quiet 3+ days), the sliding **To reply \| Waiting** switch, a closed **Past due · N** panel at the bottom of To reply, then a closed + Add someone panel |
 | `/add` | The full add form on its own page |
 | `/item/[id]` | Person, reply-by line and time bar, Boost when past due, Conversation (once there's back-and-forth), What it's about and Your reply (Edit → Save / Cancel; an empty reply is a blank box to click into), Copy reply, Mark sent, Keep tracking after I reply, Delete. Waiting items show "Action taken?" instead of the reply box; done items show "Move back to To reply" |
@@ -124,7 +124,7 @@ What it's about and Your reply are read-only until you click Edit. Then Save kee
 - **Past due:** "Reply by 10/18 · 2 days past". The card and its icon grey out, staying AA-readable, and a **+4 hours** button appears.
 - **Waiting:** "Waiting on them", then "No reply yet. Follow up?" after 3 quiet days.
 - **Pills:** only "Draft started" and the Boost button.
-- **Welcome back:** "3 people are waiting on a reply, Mom for 4 days." plus "1 conversation has gone quiet." when there's a follow-up due. With nothing waiting: "You're all caught up."
+- **Welcome back** (only after an hour or more away): "You owe 3 replies. Mom has been waiting 4 days." It names the longest-waiting person with a deadline. It adds "1 conversation has gone quiet." when a follow-up is due. With nothing waiting: "You're all caught up."
 - **Calm tone:** no alarm colors or guilt wording, and state is never shown by color alone.
 - **Counts** ("To reply 3", "Past due 2") are computed from the lists on screen, so they always match.
 
@@ -134,7 +134,7 @@ What it's about and Your reply are read-only until you click Edit. Then Save kee
 - **Storage blocked:** "This browser isn't saving. Your drafts will disappear when you close the tab." The login still works for that tab.
 - **Corrupt saved data:** start fresh with the first-visit screen.
 - **Copy fails:** "Couldn't copy. Select the text and copy it yourself." The reply text is selected for you.
-- **Copy with no reply:** the reply box opens with "Write your reply first, then copy it."
+- **Copy with no reply:** Copy reply is disabled until a reply is saved.
 - **Delete:** asks "Delete Mom and the draft? This can't be undone." with Delete / Keep it.
 - **Nothing left to reply to:** "You're all caught up. Add someone below when a message comes in," and + Add someone opens on its own. Never a dead end.
 - **Only past-due items left:** "Nothing coming up. The ones past their date are below," with the Past due panel underneath.

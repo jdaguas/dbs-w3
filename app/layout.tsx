@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Suspense } from "react";
+import { LoginGate } from "@/components/LoginGate";
 import { Nav } from "@/components/Nav";
 import "./globals.css";
 
@@ -25,7 +27,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
         <Nav />
         <main id="main" className="mx-auto w-full max-w-xl flex-1 px-4 py-6">
-          {children}
+          {/* The gate reads the URL, which Next.js needs inside Suspense. */}
+          <Suspense>
+            <LoginGate>{children}</LoginGate>
+          </Suspense>
         </main>
       </body>
     </html>

@@ -33,6 +33,9 @@ import { removeItem, setFlash, updateItem, useStore } from "@/lib/storage";
 
 export function ItemView({ id }: { id: string }) {
   const store = useStore();
+  // Next.js keeps a page's state when you leave (cacheComponents); start fresh on each visit so an
+  // unsaved edit doesn't come back. Back/forward still restores it.
+  const { bfcacheId } = useRouter();
   // Set just before navigating away after Delete, so the "not here" message doesn't flash.
   const [leaving, setLeaving] = useState(false);
 
@@ -56,7 +59,7 @@ export function ItemView({ id }: { id: string }) {
           Your drafts will disappear when you close the tab.
         </Banner>
       )}
-      <ItemDetail item={item} onLeave={() => setLeaving(true)} />
+      <ItemDetail key={bfcacheId} item={item} onLeave={() => setLeaving(true)} />
     </>
   );
 }
@@ -85,10 +88,6 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
   }
 
   async function copyReply() {
-    if (!draft.trim()) {
-      editDraft(true);
-      return setCopy({ ok: false, text: "Write your reply first, then copy it." });
-    }
     try {
       await navigator.clipboard.writeText(draft);
       setCopy({ ok: true, text: `Copied. Paste it into ${source}, then mark it sent.` });
@@ -191,7 +190,7 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
             id="draft"
             heading="Your reply"
             label="Your reply"
-            hint="Saved here, so you can come back to it."
+            hint="Press Save to keep it. You can finish it later."
             value={draft}
             empty="No reply started yet."
             tooLong={`Shorten your reply to under ${TEXT_MAX.toLocaleString()} characters.`}
@@ -206,7 +205,8 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
               <Button onClick={markSent} full className="sm:w-auto">
                 Mark sent
               </Button>
-              <Button variant="secondary" onClick={copyReply} full className="sm:w-auto">
+              {/* Nothing to copy until a reply is saved. */}
+              <Button variant="secondary" onClick={copyReply} disabled={!draft.trim()} full className="sm:w-auto">
                 Copy reply
               </Button>
             </div>

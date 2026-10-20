@@ -16,14 +16,11 @@ import { addItem, addedFlash, clearFlash, getPreviousVisit, peekFlash, useStore,
 
 export default function Home() {
   const store = useStore();
-  const router = useRouter();
-  // Mock login: someone who hasn't passed the login screen on this device goes there first.
-  const needsLogin = store !== null && !store.signedIn;
-  useEffect(() => {
-    if (needsLogin) router.replace("/login");
-  }, [needsLogin, router]);
-  if (!store || needsLogin) return <p className="text-ink-muted">Loading your drafts…</p>;
-  return <HomeContent store={store} />;
+  // Next.js keeps a page's state when you navigate away (cacheComponents). Keying on bfcacheId starts
+  // Home fresh on each visit (new confirmation, re-sorted list) while Back still restores it.
+  const { bfcacheId } = useRouter();
+  if (!store) return <p className="text-ink-muted">Loading your drafts…</p>;
+  return <HomeContent key={bfcacheId} store={store} />;
 }
 
 const STARTERS: { who: string; channel: Channel }[] = [
@@ -56,10 +53,14 @@ function plural(n: number, one: string, many: string) {
 function welcomeSummary(needs: Item[], followUps: Item[], now: Date) {
   const parts: string[] = [];
   if (needs.length > 0) {
-    const oldest = needs.reduce((a, b) => (a.createdAt < b.createdAt ? a : b));
+    parts.push(`You owe ${plural(needs.length, "reply", "replies")}.`);
+    // Name the one who's waited longest, leaving out No rush unless that's all there is.
+    const dated = needs.filter((i) => i.dueDate !== null);
+    const pool = dated.length > 0 ? dated : needs;
+    const oldest = pool.reduce((a, b) => (a.createdAt < b.createdAt ? a : b));
     const days = daysSince(oldest.createdAt, now);
-    const since = days >= 2 ? `, ${oldest.who} for ${days} days` : days === 1 ? `, ${oldest.who} since yesterday` : "";
-    parts.push(`${plural(needs.length, "person is", "people are")} waiting on a reply${since}.`);
+    if (days >= 2) parts.push(`${oldest.who} has been waiting ${days} days.`);
+    else if (days === 1) parts.push(`${oldest.who} has been waiting since yesterday.`);
   }
   if (followUps.length > 0) {
     parts.push(`${plural(followUps.length, "conversation has", "conversations have")} gone quiet.`);
@@ -178,7 +179,13 @@ function HomeContent({ store }: { store: Store }) {
   const sameItems = sorted.length === order.length && sorted.every((i) => order.includes(i.id));
   if (!sameItems) setSnapshot(snapshot());
   const needs = sameItems ? order.map((id) => sorted.find((i) => i.id === id)!) : sorted;
-  const pastDueSet = new Set(sameItems ? pastDueIds : sorted.filter((i) => isOverdue(i, now)).map((i) => i.id));
+  // A boost moves a card back up to the active list right away (it's no longer past its date).
+  const pastDueSet = new Set(
+    (sameItems ? pastDueIds : sorted.filter((i) => isOverdue(i, now)).map((i) => i.id)).filter((id) => {
+      const item = sorted.find((i) => i.id === id);
+      return item && isOverdue(item, now);
+    }),
+  );
   const upcoming = needs.filter((i) => !pastDueSet.has(i.id));
   const pastDue = needs.filter((i) => pastDueSet.has(i.id));
   const followUps = followUpsDue(store.items, now);
@@ -191,7 +198,9 @@ function HomeContent({ store }: { store: Store }) {
     setList(next);
   }
   const isFirstVisit = store.isNew;
-  const showWelcome = !isFirstVisit && previousVisit !== null;
+  // Greet only after a real break (an hour or more), not on a reload right after the first add.
+  const showWelcome =
+    !isFirstVisit && previousVisit !== null && now.getTime() - new Date(previousVisit).getTime() >= 60 * 60 * 1000;
 
   // Add someone starts closed when there's a list to look at.
   const [addOpen, setAddOpen] = useState(() => needs.length === 0 && followUps.length === 0);
@@ -203,11 +212,20 @@ function HomeContent({ store }: { store: Store }) {
 
   // Close the panel and confirm at the top, above the list where the new card appears.
   function closeAdd(item?: Item) {
-    if (item) setFlash(addedFlash(item.who));
     setAddOpen(false);
-    document.getElementById("add-summary")?.focus();
-    if (item) window.scrollTo({ top: 0, behavior: "smooth" });
+    if (item) {
+      setFlash(addedFlash(item.who));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      document.getElementById("add-summary")?.focus();
+    }
   }
+
+  // Move focus to each new confirmation so keyboard and screen-reader users hear it, instead of
+  // focus dropping to the page when the form closes.
+  useEffect(() => {
+    if (flash) document.getElementById("flash")?.focus();
+  }, [flash]);
 
   function confirm(item: Item) {
     setFlash(addedFlash(item.who));
@@ -225,9 +243,11 @@ function HomeContent({ store }: { store: Store }) {
     </Banner>
   );
   const flashBanner = flash && (
-    <Banner tone="success" live title={flash.title}>
-      {flash.detail}
-    </Banner>
+    <div id="flash" tabIndex={-1} className="rounded-card focus:outline-2 focus:outline-offset-2 focus:outline-focus">
+      <Banner tone="success" live title={flash.title}>
+        {flash.detail}
+      </Banner>
+    </div>
   );
 
   if (isFirstVisit) {

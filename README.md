@@ -6,7 +6,7 @@ You see a message you can't answer yet. Log it in a few seconds, start the reply
 
 Built for Design, Build, Ship (MPCS 51238), Assignment 3: Patterns & Flows.
 
-- **Live:** _add Vercel URL_
+- **Live:** [dbs-w3.vercel.app](https://dbs-w3.vercel.app/)
 - **Demo login:** `mpcs@gmail.com` / `P@s#word` (a mock login; there are no real accounts)
 - **Stack:** Next.js (App Router) + Tailwind CSS. Everything is saved in your browser with localStorage. No database, backend, or external APIs.
 
@@ -29,7 +29,7 @@ flowchart TD
   Login -- Yes --> Saved{Anything saved?}
 
   Saved -- No --> First["First visit: 'Who do you owe a reply?'<br/>+ Add someone form (open), starter chips,<br/>1 example item with a draft"]
-  Saved -- Yes --> Back["Welcome back: '3 people are waiting on a reply, Mom for 4 days.'<br/>follow-ups due on top, drafts restored"]
+  Saved -- Yes --> Back["Welcome back (after an hour or more away):<br/>'You owe 3 replies. Mom has been waiting 4 days.'<br/>follow-ups due on top, drafts restored"]
   First -- "fill the form or tap a chip" --> Check
   Back --> Home
 
@@ -103,7 +103,7 @@ Corrupt or missing data starts fresh instead of crashing. If the browser blocks 
 
 - **A reply you started.** The point of Drafts is to start the reply when you have a minute and finish it later, so a half-written draft is waiting for you.
 - **Deadlines that move.** Each card shows "Reply by 10/20 · 2 days left" over a time bar that drains toward the date and turns amber when time is short. To reply is sorted most urgent first.
-- **A greeting that tells you what changed:** "Welcome back. 3 people are waiting on a reply, Mom for 4 days."
+- **A greeting that tells you what changed:** "Welcome back. You owe 3 replies. Mom has been waiting 4 days." It only appears after an hour or more away, so it means something.
 - **Follow-up nudges.** Turn on "Keep tracking after I reply" and the conversation moves to Waiting. If they go quiet for 3 days, it comes back to the top of Home: "No reply yet. Follow up?"
 - **A way back from missing a date.** A past-due card greys out (calm, not alarming) and offers **+4 hours**. Each tap gives more time (4 hours → 8 hours → 1 day), so you can still recover an overdue item.
 
@@ -149,11 +149,25 @@ Three subagents studied how similar tools welcome someone new: the first screen,
 
 ## First-run check
 
-_To do after deploying: give the agent the Vercel URL and a goal ("Log in, add three people you owe a reply this week, start a reply to one, then come back later"), have it go through the first visit, the main task, and a return visit, and paste its usability feedback here along with what changed._
+After deploying, an agent used [dbs-w3.vercel.app](https://dbs-w3.vercel.app/) as a brand-new user in a real headless browser at phone (390×844) and desktop sizes. Its goal: "Log in, then add three people you owe a reply to this week, and start a reply to one of them." It went through the first visit, the main task, a return visit (closing and reopening the browser, plus the `/demo` sample data), logging out and back in, and a keyboard-only pass. It saw no console or page errors.
 
-| Feedback | What I changed |
-|---|---|
-| _…_ | _…_ |
+**What worked:** the login hints and errors ("Incorrect email or password. Use the demo login shown under each field.") were self-explanatory. The add-form errors said what to do and kept what was typed. Picking Email revealed "Which email app?" right away. Copy reply worked, and data survived reopening the browser and logging out. Everything was reachable by keyboard, including arrow keys on the chips and tabs.
+
+I checked every fix with a Playwright script against a production build before redeploying.
+
+| Feedback | Severity | What I changed |
+|---|---|---|
+| Focus ring on the filled teal buttons (Log in, Add to Drafts, + Add someone) is nearly invisible | High | The ring was teal but faded in from white (`transition-colors` animated the outline), and the agent's screenshot caught it mid-fade. The focus color is now set all the time, so the teal ring appears instantly |
+| "Copy reply" with an empty draft flips the page into an edit state, and the red error stays after you start typing | Medium | Copy reply is disabled until there's a saved reply, so that state and its error are gone |
+| The reply hint says "Saved here" but there's a Save button, so it's unclear when a draft is saved | Medium | The hint now says "Press Save to keep it. You can finish it later." The agent had also seen unsaved text come back. The cause: with `cacheComponents`, Next.js hides pages instead of unmounting them, so state survived navigation. The item page now starts fresh on each visit (keyed on `bfcacheId`), and only saved text comes back |
+| Mark sent gives no clear confirmation and no undo | Medium | Same cause: the preserved Home never re-read the confirmation. Home now starts fresh on each visit, so "Replied to Mom. That's off your list." shows (the list re-sorts too). Undo was left out to keep it simple |
+| Wording: "Welcome back" right after the first add. "N people are waiting on a reply" clashes with the "Waiting" tab, which means *you're* waiting on *them* | Medium | Now "You owe 13 replies. Landlord has been waiting 8 days." It names the longest-waiting person with a deadline (not a No rush one) and fixes the comma splice. "Welcome back" only shows after an hour or more away |
+| Past due is collapsed at the bottom, though those are the most overdue | Medium | Kept on purpose, so the active list isn't cluttered. The panel shows its count ("Past due 2"), and boosting a card moves it back into the active list |
+| Starter chips disappear after the first add | Low | Not changed: they're a first-visit shortcut, and "+ Add someone" is always in the header |
+| Card previews are cut short because the date takes half the line | Low | Not changed for now |
+| After a boost, the card still offers the next boost and stays under Past due | Low | A boosted card now moves straight back into the active list. The next boost stays available so you can add more time |
+| The login only guards Home; `/add` and `/item/…` still open while logged out | Low | A shared `LoginGate` in the layout sends every page to `/login` until you log in (except `/login` and the `/demo` tools) |
+| After a successful add, keyboard focus drops to the page body | Low | Focus moves to the "Added Mom." confirmation, so it's announced |
 
 ## Run it locally
 

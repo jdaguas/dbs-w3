@@ -78,7 +78,10 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
 
   function editDraft(open: boolean) {
     setEditingDraft(open);
-    if (open) setCopy(null);
+    if (open) {
+      setCopy(null);
+      requestAnimationFrame(() => document.getElementById("draft")?.focus());
+    }
   }
 
   async function copyReply() {
@@ -195,7 +198,8 @@ function ItemDetail({ item, onLeave }: { item: Item; onLeave: () => void }) {
             editing={editingDraft}
             onEditingChange={editDraft}
             onSave={(text) => updateItem(item.id, { draft: text })}
-            rows={6}
+            rows={4}
+            blankBox
           />
           {!editingDraft && (
             <div className="flex flex-col gap-3 sm:flex-row-reverse sm:justify-end">
@@ -275,6 +279,7 @@ function EditableText({
   onEditingChange,
   onSave,
   rows,
+  blankBox = false,
 }: {
   id: string;
   heading: string;
@@ -288,6 +293,8 @@ function EditableText({
   onEditingChange: (editing: boolean) => void;
   onSave: (text: string) => void;
   rows: number;
+  /** With nothing saved, show an empty box to click into instead of an Add button. */
+  blankBox?: boolean;
 }) {
   const [text, setText] = useState(value);
   const [error, setError] = useState<string>();
@@ -301,6 +308,7 @@ function EditableText({
     }
   }
   const hasText = value.trim() !== "";
+  const showBox = editing || (blankBox && !hasText);
 
   function focusLater(target: string) {
     requestAnimationFrame(() => document.getElementById(target)?.focus());
@@ -325,7 +333,7 @@ function EditableText({
     close();
   }
 
-  if (editing) {
+  if (showBox) {
     return (
       <div className="flex flex-col gap-3">
         <TextArea
@@ -340,14 +348,19 @@ function EditableText({
           }}
           error={error}
           rows={rows}
-          autoFocus
+          placeholder={blankBox ? "Write your reply…" : undefined}
+          // Clicking or tabbing into the blank box starts editing in place.
+          onFocus={() => !editing && onEditingChange(true)}
+          autoFocus={editing}
         />
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={save}>Save</Button>
-          <Button variant="ghost" onClick={close}>
-            Cancel
-          </Button>
-        </div>
+        {editing && (
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={save}>Save</Button>
+            <Button variant="ghost" onClick={close}>
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
